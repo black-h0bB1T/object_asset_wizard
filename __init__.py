@@ -38,6 +38,9 @@ from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview,
 from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
                                         ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
 
+# 0.1.3
+#   Preview size in panels can now be scaled from preferences
+#   Fix in preferences (use of __package__)
 # 0.1.2
 #   Better view on objects in preview
 #   Support for multiple material in one .blend added
@@ -67,10 +70,13 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 # +TODO: Update Preview if selected only
 # +TODO: Open button for materials added
 # +TODO: --Release
-# TODO: Append object at cursor, optionally lock Move Z & Rotate XY
-# TODO: Some default settings (e.g. for exporter) should be adjustable in prefs
+# +TODO: Preview scale adjustable
 # TODO: NW: Quick bake curvature mask: https://www.youtube.com/watch?v=RhMEBKuPYXY&feature=youtu.be
 #       Freestyle? + http://www.neilblevins.com/cg_education/vertex_map_wear/vertex_map_wear.htm#CurveMap
+# TODO: Sub-categories
+# TODO: ?Adjustable rows/columns for previews (possible?)
+# TODO: Append object at cursor, optionally lock Move Z & Rotate XY
+# TODO: Some default settings (e.g. for exporter) should be adjustable in prefs
 # TODO: NW: One click create paint texture for mask
 # TODO: NW: Better Masks
 # TODO: NW: Finalize different texture unrepeater solutions
@@ -88,7 +94,7 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 
 bl_info = {
     "name" : "Asset Wizard",
-    "version": (0, 1, 2),
+    "version": (0, 1, 3),
     "author" : "h0bB1T",
     "description" : "Asset import and export utility.",
     "blender" : (2, 80, 0),

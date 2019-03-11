@@ -54,7 +54,9 @@ class ImportPanel(Panel):
 
     # Draw
     def draw(self, context):
-        compact = PreferencesPanel.get().compact_panels
+        prefs = PreferencesPanel.get()
+        compact = prefs.compact_panels
+        preview_scale = 5.0 * prefs.preview_scale
         properties = Properties.get()
 
         box = self.layout.box()
@@ -73,7 +75,12 @@ class ImportPanel(Panel):
 
                 if PreviewHelper.getCollection(ASSET_TYPE_OBJECT).items:
                     is_fbx = properties.iobj_previews.lower().endswith(".fbx")
-                    col.row(align=True).template_icon_view(properties, "iobj_previews", show_labels=True)
+                    col.row(align=True).template_icon_view(
+                        properties, 
+                        "iobj_previews", 
+                        show_labels=True,
+                        scale=preview_scale
+                    )
                     split = col.row(align=True).split(factor=0.5, align=True)
                     split.operator(RefreshObjectPreviews.bl_idname, icon="FILE_REFRESH")
                     split.operator(ReRenderObjectPreview.bl_idname, icon="RENDER_STILL")
@@ -100,7 +107,12 @@ class ImportPanel(Panel):
                 col.row(align=True).prop(properties, "imat_categories")
 
                 if PreviewHelper.getCollection(ASSET_TYPE_MATERIAL).items:
-                    col.row(align=True).template_icon_view(properties, "imat_previews", show_labels=True)
+                    col.row(align=True).template_icon_view(
+                        properties, 
+                        "imat_previews", 
+                        show_labels=True,
+                        scale=preview_scale
+                        )
                     split = col.row(align=True).split(factor=0.5, align=True)
                     split.operator(RefreshMaterialPreviews.bl_idname, icon="FILE_REFRESH")
                     split.operator(ReRenderMaterialPreview.bl_idname, icon="RENDER_STILL")
@@ -239,7 +251,9 @@ class NodeWizardPanel(Panel):
 
 
     def draw(self, context):
-        compact = PreferencesPanel.get().compact_panels
+        prefs = PreferencesPanel.get()
+        compact = prefs.compact_panels
+        preview_scale = 5.0 * prefs.preview_scale
         properties = Properties.get()
         layout = self.layout
 
@@ -323,14 +337,24 @@ class NodeWizardPanel(Panel):
             box.label(text="Masks")
 
         col = box.column(align=True)
-        col.row().template_icon_view(properties, "nw_nodes_previews", show_labels=True)
+        col.row().template_icon_view(
+            properties, 
+            "nw_nodes_previews", 
+            show_labels=True,
+            scale=preview_scale
+        )
         col.row().operator(NodeImporter.bl_idname, text="Add Mask", icon="ADD").group = properties.nw_nodes_previews
 
         if not compact:
             box.label(text="Materials")
 
         col = box.column(align=True)
-        col.row().template_icon_view(properties, "nw_materials_previews", show_labels=True)
+        col.row().template_icon_view(
+            properties, 
+            "nw_materials_previews", 
+            show_labels=True,
+            scale=preview_scale
+        )
         col.row().operator(NodeImporter.bl_idname, text="Add Material", icon="ADD").group = properties.nw_materials_previews
 
         #########################################

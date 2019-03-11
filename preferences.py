@@ -17,10 +17,10 @@
 import bpy, os
 
 from bpy.types import AddonPreferences
-from bpy.props import StringProperty, EnumProperty, BoolProperty
+from bpy.props import StringProperty, EnumProperty, BoolProperty, FloatProperty
 
 class PreferencesPanel(AddonPreferences):
-    bl_idname = "object_asset_wizard"
+    bl_idname = __package__
 
     preview_engine_type = (
         ('CYCLES', "Cycles", ""),
@@ -39,11 +39,19 @@ class PreferencesPanel(AddonPreferences):
 
     compact_panels: BoolProperty(name="Use compact panels", default=True)
 
+    preview_scale: FloatProperty(
+        name="Scale factor for previews", 
+        default=1.0,
+        soft_min=0.2,
+        soft_max=5.0
+        )
+
     def draw(self, context):
         self.layout.row().prop(self, "root", text="Root Asset Directory")
         self.layout.row().prop(self, "preview_engine")
+        self.layout.row().prop(self, "preview_scale")
         self.layout.row().prop(self, "compact_panels")
 
     @staticmethod
     def get():
-        return bpy.context.preferences.addons[PreferencesPanel.bl_idname].preferences
+        return bpy.context.preferences.addons[__package__].preferences
