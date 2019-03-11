@@ -29,7 +29,8 @@ from . importer_ops         import (AppendObjectOperator, LinkObjectOperator,
                                     SetMaterialOperator, AppendMaterialOperator, OpenObjectOperator, OpenMaterialOperator)
 from . render_previews_ops  import RenderPreviewsOperator,RenderAllPreviewsOperator        
 from . generate_ops         import GeneratePBROperator, GenerateImageOperator, ExportPBROperator, ExportMaterialOperator             
-from . node_importer_ops    import NodeImporter     
+from . node_importer_ops    import NodeImporter  
+from . ao_curv_calc_ops     import BakeAoMapOperator, CurvatureMapOperator
 from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTextureBasedSetupOperator,
                                         GenerateTwoLayerShaderBasedSetupOperator, ImportDistortionOperator,
                                         ImportBlurOperator, ImportTextureBoxMapUVW, ImportExtNoise,
@@ -358,6 +359,16 @@ class NodeWizardPanel(Panel):
         col.row().operator(NodeImporter.bl_idname, text="Add Material", icon="ADD").group = properties.nw_materials_previews
 
         #########################################
+
+        if not compact:
+            box = layout.box()
+            box.label(text="AO and Curvature")
+
+        row = box.row(align=True)
+        split = row.split(factor=0.5, align=True)
+        split.operator(BakeAoMapOperator.bl_idname)
+        split.operator(CurvatureMapOperator.bl_idname)
+
 
 class NodeWizardExportPanel(Panel):
     """
