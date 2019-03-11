@@ -216,7 +216,7 @@ class ImportDistortionOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}        
 
     def execute(self, context):
-        NodeImporter.import_utils_group("NW_Vector_Blur")
+        NodeImporter.import_utils_group("NW_Vector_Distortion")
         return{'FINISHED'}   
 
 class ImportBlurOperator(Operator):
