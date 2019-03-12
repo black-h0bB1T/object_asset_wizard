@@ -139,8 +139,8 @@ class Properties(PropertyGroup):
         name="", 
         items=lambda self, context: self.active_uv_maps(context)
     )
-    cao_uv_map_distance_auto: BoolProperty(name="Auto island distance", default=True)
-    cao_uv_map_distance: FloatProperty(name="Island distance", default=0.01)
+    cao_uv_map_distance_auto: BoolProperty(name="Auto Island Distance", default=True)
+    cao_uv_map_distance: FloatProperty(name="Island Distance", default=0.01)
 
     cao_ao_size: EnumProperty(name="AO Size", items=texture_size_type, default="512")
     cao_ao_quality: IntProperty(name="Quality", min=1, max=128, default=16)
@@ -150,9 +150,9 @@ class Properties(PropertyGroup):
 
     cao_curv_size: EnumProperty(name="Curv Size", items=texture_size_type, default="2048")
     cao_analyze_mode: EnumProperty(name="Analyze Mode", items=cao_analyze_mode_type, default="Vertex")
-    cao_curv_min_angle: IntProperty(name="Min Angle", min=0, max=90, default=5)
+    cao_curv_min_angle: IntProperty(name="Min Angle", min=0, max=90, default=10)
     cao_curv_line_thickness: IntProperty(name="Line Thickness", min=1, max=128, default=16)
-
+    cao_curv_apply_modifiers: BoolProperty(name="Apply Modfiers", default=False)
 
     def active_uv_maps(self, context):
         """

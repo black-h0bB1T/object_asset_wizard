@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
-import bpy
+import bpy, os
 
 from bpy.types              import Panel, WindowManager
 from bpy.props              import EnumProperty, StringProperty
@@ -374,17 +374,67 @@ class NodeWizardMapPanel(Panel):
             context.space_data.node_tree is not None and \
             context.space_data.tree_type == 'ShaderNodeTree'
 
+
+    def get_blend_path(self):
+        """
+        Return path to blend, None if not known (unsaved).
+        """
+        if len(bpy.data.filepath) == 0:
+            return None
+
+        return os.path.split(bpy.data.filepath)[0]
+
+    
+    def get_export_file(self, postfix):
+        """
+        Create export file name.
+        """
+        properties = Properties.get()
+        filename = bpy.path.clean_name(properties.cao_export_map_basename) + \
+            "_" + postfix + ".png"
+
+        if properties.cao_export_location == '0':
+            return os.path.join(
+                self.get_blend_path(),
+                filename
+            )
+        else:
+            return os.path.join(
+                self.get_blend_path(),
+                properties.cao_export_subfolder,
+                filename
+            )
+
+
+    def calculate_margin(self):
+        """
+        Calculate the margin for UVMap generation.
+        """
+        properties = Properties.get()
+        if properties.cao_uv_map_distance_auto:
+            ao = 8 * float(properties.cao_ao_margin) / float(properties.cao_ao_size)
+            curv = 6 * float(properties.cao_curv_line_thickness) / float(properties.cao_curv_size)
+            return ao if ao > curv else curv 
+        else:
+            return properties.cao_uv_map_distance
+
+
     def draw(self, context):
         prefs = PreferencesPanel.get()
         compact = prefs.compact_panels
-        preview_scale = 5.0 * prefs.preview_scale
         properties = Properties.get()
         layout = self.layout
 
         box = layout.box()
+
+        if not self.get_blend_path():
+            box.label(text="File not saved")
+            box.label(text="Feature requires path to blend")
+            return
+
         if properties.cao_uv_map != "__DUMMY__":
             if not compact:
-                box.label(text="Export Location:")
+                box.label(text="Export Location")
 
             col = box.column(align=True)
             col.row(align=True).prop(properties, "cao_export_location", expand=True)
@@ -409,7 +459,8 @@ class NodeWizardMapPanel(Panel):
         col.row(align=True).prop(properties, "cao_uv_map_distance_auto", toggle=True)
         if not properties.cao_uv_map_distance_auto:
             col.row(align=True).prop(properties, "cao_uv_map_distance")
-        col.row(align=True).operator(MapGenerateUV.bl_idname)
+        op = col.row(align=True).operator(MapGenerateUV.bl_idname)
+        op.island_margin = self.calculate_margin()
 
         if properties.cao_uv_map != "__DUMMY__":
             if not compact:
@@ -427,8 +478,21 @@ class NodeWizardMapPanel(Panel):
                 toggle=True,
                 text="Local only" if properties.cao_ao_local else "Global"
             )
-            col.operator(BakeAoMapOperator.bl_idname)
-            col.operator(AoNodeOperator.bl_idname)
+            op = col.operator(BakeAoMapOperator.bl_idname)
+            op.export_path = self.get_export_file("ao")
+            op.name = properties.cao_export_map_basename
+            op.uv_map = properties.cao_uv_map
+            op.dimensions = int(properties.cao_ao_size)
+            op.distance = properties.cao_ao_distance
+            op.quality = properties.cao_ao_quality
+            op.render_margin = properties.cao_ao_margin
+            op.local = properties.cao_ao_local
+
+            if os.path.exists(self.get_export_file("ao")):
+                op = col.operator(AoNodeOperator.bl_idname)
+                op.export_path = self.get_export_file("ao")
+                op.name = properties.cao_export_map_basename + "_ao"
+                op.uv_map = properties.cao_uv_map
 
             if not compact:
                 box = layout.box()
@@ -439,8 +503,22 @@ class NodeWizardMapPanel(Panel):
             col.row(align=True).prop(properties, "cao_analyze_mode", expand=True)
             col.row(align=True).prop(properties, "cao_curv_min_angle")
             col.row(align=True).prop(properties, "cao_curv_line_thickness")
-            col.operator(CurvatureMapOperator.bl_idname)
-            col.operator(CurvatureNodeOperator.bl_idname)
+            col.row(align=True).prop(properties, "cao_curv_apply_modifiers", toggle=True)
+            op = col.operator(CurvatureMapOperator.bl_idname)
+            op.export_path = self.get_export_file("curv")
+            op.name = properties.cao_export_map_basename
+            op.uv_map = properties.cao_uv_map
+            op.dimensions = int(properties.cao_curv_size)
+            op.analyze_mode = properties.cao_analyze_mode
+            op.min_angle = properties.cao_curv_min_angle
+            op.line_thickness = properties.cao_curv_line_thickness
+            op.apply_modifiers = properties.cao_curv_apply_modifiers
+
+            if os.path.exists(self.get_export_file("curv")):
+                op = col.operator(CurvatureNodeOperator.bl_idname)
+                op.export_path = self.get_export_file("curv")
+                op.name = properties.cao_export_map_basename + "_curv"
+                op.uv_map = properties.cao_uv_map
 
 
 class NodeWizardExportPanel(Panel):

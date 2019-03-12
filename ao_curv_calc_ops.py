@@ -14,11 +14,13 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
-import bpy, json
+import bpy, json, os, platform, subprocess
 
 from bpy.types              import Operator
+from bpy.props              import StringProperty, IntProperty, FloatProperty, BoolProperty
 
 from . properties           import Properties
+from . node_utils           import NodeUtils
 
 class BakeAoMapOperator(Operator):
     """
@@ -31,6 +33,17 @@ class BakeAoMapOperator(Operator):
     bl_description = "Bakes an AO map of the selected (single) object, which must have a non-" + \
         " overlapping UV map"
     bl_options = {'REGISTER'}
+
+
+    export_path: StringProperty()
+    name: StringProperty()
+    uv_map: StringProperty()
+    dimensions: IntProperty()
+    distance: FloatProperty()
+    quality: IntProperty()
+    render_margin: IntProperty()
+    local: BoolProperty()
+
 
     def store_settings(self):
         """
@@ -53,7 +66,7 @@ class BakeAoMapOperator(Operator):
         scene.render.engine = 'CYCLES'
         scene.render.use_bake_multires = False
         scene.cycles.bake_type = 'EMIT' 
-        scene.render.bake.margin = 16
+        scene.render.bake.margin = self.render_margin
         scene.render.bake.use_clear = True
         scene.render.bake.use_selected_to_active = False
 
@@ -71,7 +84,7 @@ class BakeAoMapOperator(Operator):
         scene.render.engine = self.engine
 
 
-    def create_ao_material(self, samples, distance, dimension, outputfile):
+    def create_ao_material(self):
         """
         Create material that we bake.
         """
@@ -87,9 +100,9 @@ class BakeAoMapOperator(Operator):
 
         # Create AO node.
         ao = tree.nodes.new("ShaderNodeAmbientOcclusion")
-        ao.samples = samples
-        ao.only_local = True
-        ao.inputs["Distance"].default_value = distance
+        ao.samples = self.quality
+        ao.only_local = self.local
+        ao.inputs["Distance"].default_value = self.distance
 
         # Invert color.
         invert = tree.nodes.new("ShaderNodeInvert")
@@ -105,18 +118,26 @@ class BakeAoMapOperator(Operator):
         tree.links.new(invert.outputs["Color"], emit.inputs["Color"])
         tree.links.new(emit.outputs["Emission"], output.inputs["Surface"])
 
+        # Create the image.
         self.image = bpy.data.images.new(
-            name=outputfile, 
-            width=dimension, 
-            height=dimension,
+            name=self.name, 
+            width=self.dimensions, 
+            height=self.dimensions,
             alpha=False, 
             float_buffer=False
         )
         self.image.file_format = 'PNG'
-        self.image.filepath_raw = outputfile
+        self.image.filepath_raw = self.export_path
 
+        # UV map node.
+        uv = tree.nodes.new("ShaderNodeUVMap")
+        uv.uv_map = self.uv_map
+
+        # Image node.
         img = tree.nodes.new("ShaderNodeTexImage")
         img.image = self.image
+
+        tree.links.new(uv.outputs["UV"], img.inputs["Vector"])
 
 
     def remove_ao_material(self):
@@ -124,6 +145,7 @@ class BakeAoMapOperator(Operator):
         Remove generated material from current scene.
         """
         bpy.data.materials.remove(self.material)
+        bpy.data.images.remove(self.image)
 
 
     def apply_material(self, obj):
@@ -152,14 +174,14 @@ class BakeAoMapOperator(Operator):
             obj.data.materials.pop(index=0)
 
 
-    def bake(self, obj, dimension, outputfile):
+    def bake(self, obj):
         """
         Bake AO map to the given (external) file.
         """
         self.store_settings()
         self.adjust_settings()
 
-        self.create_ao_material(16, 0.25, dimension, outputfile)
+        self.create_ao_material()
         original = self.apply_material(obj)
 
         bpy.ops.object.bake(type='EMIT', save_mode='EXTERNAL')
@@ -169,17 +191,15 @@ class BakeAoMapOperator(Operator):
         self.remove_ao_material()
         self.restore_settings()
 
-    
-    def create_node(self):
-        pass
-
 
     def execute(self, context):
-        self.bake(
-            context.active_object,
-            1024,
-            "c:/tmp/test_ao.png"
-        )
+        # Output path must exist (does nothing if exists).
+        path = os.path.split(self.export_path)[0]
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        # Do the bake.
+        self.bake(context.active_object)
 
         return {'FINISHED'}
 
@@ -193,28 +213,37 @@ class CurvatureMapOperator(Operator):
     bl_description = "Calculates the curvature map for the selected object"
     bl_options = {'REGISTER'}
 
-    def export_mesh(self, filename, obj):
+    export_path: StringProperty()
+    name: StringProperty()
+    uv_map: StringProperty()    
+    dimensions: IntProperty()
+    analyze_mode: StringProperty()
+    min_angle: IntProperty()
+    line_thickness: IntProperty()
+    apply_modifiers: BoolProperty()
+
+    def export_mesh(self, obj, json_file):
         """
         Create input file for curvature tool.
         """
-        m = bpy.context.object.to_mesh(bpy.context.depsgraph, True)
+        m = obj.to_mesh(bpy.context.depsgraph, self.apply_modifiers)
         m.calc_normals()
 
         mesh = {
             "settings": {
-                "mode": "Deep",
-                "outputFile": "c:/tmp/curvature.png",
-                "aoFile": "c:/tmp/test_ao.png",
-                "imageDimensions": 2048,
-                "lineThickness": 16,
-                "minAngle": 0.05
+                "mode": self.analyze_mode,
+                "outputFile": self.export_path,
+                "aoFile": "",
+                "imageDimensions": self.dimensions,
+                "lineThickness": self.line_thickness,
+                "minAngle": float(self.min_angle) / 180.0
             },
             "uvs": [],
             "vertices": [],
             "faces": []
         }
 
-        uvs = m.uv_layers[0].data
+        uvs = m.uv_layers[self.uv_map].data
         for v in uvs:
             mesh["uvs"].append((v.uv[0], v.uv[1]))
             
@@ -228,22 +257,37 @@ class CurvatureMapOperator(Operator):
                 "vertices": [ v for v in f.vertices ]
             })
 
-        with open(filename, "w") as f:
+        with open(json_file, "w") as f:
             json.dump(mesh, f, indent=4, separators=(',', ': '))
 
         bpy.data.meshes.remove(m)
     
 
     def execute(self, context):
-        self.export_mesh(
-            "c:/tmp/curvature.json",
-            context.active_object
-            )
+        json_file = os.path.splitext(self.export_path)[0] + ".json"
+        self.export_mesh(context.active_object, json_file)
+
+        if platform.system() == "Windows":
+            exe = "curvature.exe"
+        elif platform.system() == "Linux":
+            exe = "curvature"
+        else: # Darwin
+            self.report({'ERROR'}, "Tool on your platform not available (yet)")
+            return {'FINISHED'}
+
+        curvtool = os.path.join(os.path.split(__file__)[0], "data", "tools", exe)
+        cmd = [ curvtool, json_file ]
+        print("Command: ", cmd)
+        result = subprocess.Popen(cmd).wait()
+        if result != 0:
+            self.report({'ERROR'}, "Generation failed, see console")
+
+        os.unlink(json_file)
 
         return {'FINISHED'}
 
 
-class AoNodeOperator(Operator):
+class AoNodeOperator(Operator, NodeUtils):
     """
     Create AO map node
     """
@@ -252,12 +296,45 @@ class AoNodeOperator(Operator):
     bl_description = "Generate AO node from current map settings"
     bl_options = {'REGISTER'}
 
+    export_path: StringProperty()
+    name: StringProperty()
+    uv_map: StringProperty()
+
     def execute(self, context):
+        # Access the current tree.
+        group, input, output = self.create_group(context.space_data.edit_tree, self.name, 6)
+        tree = group.node_tree
+
+        # UV map node.
+        uv = self.at(tree.nodes.new("ShaderNodeUVMap"), 1, 0)
+        uv.uv_map = self.uv_map
+
+        # Image node.
+        img = self.at(self.create_image_node(tree, self.export_path), 2, 0)
+
+        # Adjust nodes.
+        sub = self.at(self.create_math_node(tree, 'SUBTRACT', True), 4, 0)
+        diff = self.at(self.create_math_node(tree, 'SUBTRACT'), 5, 0)
+        scale = self.at(self.create_math_node(tree, 'DIVIDE'), 5, -1)
+
+        mn = self.create_group_input(group, input, "Float", "Min", 0.0)
+        mx = self.create_group_input(group, input, "Float", "Max", 1.0)
+        val = self.create_group_output(group, output, "Float", "Value")
+
+        # Connect nodes.
+        tree.links.new(uv.outputs["UV"], img.inputs["Vector"])
+        tree.links.new(img.outputs["Color"], sub.inputs[0])
+        tree.links.new(mn, sub.inputs[1])
+        tree.links.new(mx, diff.inputs[0])
+        tree.links.new(mn, diff.inputs[1])
+        tree.links.new(sub.outputs["Value"], scale.inputs[0])
+        tree.links.new(diff.outputs["Value"], scale.inputs[1])
+        tree.links.new(scale.outputs["Value"], val)
 
         return {'FINISHED'}
 
 
-class CurvatureNodeOperator(Operator):
+class CurvatureNodeOperator(Operator, NodeUtils):
     """
     Create curvature map node
     """
@@ -266,7 +343,57 @@ class CurvatureNodeOperator(Operator):
     bl_description = "Generate curvature node from current map settings"
     bl_options = {'REGISTER'}
 
+    export_path: StringProperty()
+    name: StringProperty()
+    uv_map: StringProperty()    
+
     def execute(self, context):
+        # Access the current tree.
+        group, input, output = self.create_group(context.space_data.edit_tree, self.name, 8)
+        tree = group.node_tree
+
+        # UV map node.
+        uv = self.at(tree.nodes.new("ShaderNodeUVMap"), 1, 0)
+        uv.uv_map = self.uv_map
+
+        # Image node.
+        img = self.at(self.create_image_node(tree, self.export_path), 2, 0)
+
+        # Split RGB
+        split = self.at(tree.nodes.new("ShaderNodeSeparateRGB"), 4, 0)
+
+        # Adjust nodes.
+        subCx = self.at(self.create_math_node(tree, 'SUBTRACT', True), 5, 0)
+        diffCx = self.at(self.create_math_node(tree, 'SUBTRACT'), 6, 0)
+        scaleCx = self.at(self.create_math_node(tree, 'DIVIDE'), 7, -1)
+        subCv = self.at(self.create_math_node(tree, 'SUBTRACT', True), 5, -2)
+        diffCv = self.at(self.create_math_node(tree, 'SUBTRACT'), 6, -2)
+        scaleCv = self.at(self.create_math_node(tree, 'DIVIDE'), 7, -3)
+
+        mnCx = self.create_group_input(group, input, "Float", "Min Convex", 0.0)
+        mxCx = self.create_group_input(group, input, "Float", "Max Convex", 1.0)
+        valCx = self.create_group_output(group, output, "Float", "Convex")
+        mnCv = self.create_group_input(group, input, "Float", "Min Concave", 0.0)
+        mxCv = self.create_group_input(group, input, "Float", "Max Concave", 1.0)
+        valCv = self.create_group_output(group, output, "Float", "Concave")
+
+        # Connect nodes.
+        tree.links.new(uv.outputs["UV"], img.inputs["Vector"])
+        tree.links.new(img.outputs["Color"], split.inputs["Image"])
+        tree.links.new(split.outputs["G"], subCx.inputs[0])
+        tree.links.new(mnCx, subCx.inputs[1])
+        tree.links.new(mxCx, diffCx.inputs[0])
+        tree.links.new(mnCx, diffCx.inputs[1])
+        tree.links.new(subCx.outputs["Value"], scaleCx.inputs[0])
+        tree.links.new(diffCx.outputs["Value"], scaleCx.inputs[1])
+        tree.links.new(scaleCx.outputs["Value"], valCx)
+        tree.links.new(split.outputs["R"], subCv.inputs[0])
+        tree.links.new(mnCv, subCv.inputs[1])
+        tree.links.new(mxCv, diffCv.inputs[0])
+        tree.links.new(mnCv, diffCv.inputs[1])
+        tree.links.new(subCv.outputs["Value"], scaleCv.inputs[0])
+        tree.links.new(diffCv.outputs["Value"], scaleCv.inputs[1])
+        tree.links.new(scaleCv.outputs["Value"], valCv)
 
         return {'FINISHED'}
 
@@ -280,6 +407,8 @@ class MapGenerateUV(Operator):
     bl_description = "Generate UV map for AO and curvature, named NW_UVMap"
     bl_options = {'REGISTER'}
 
+    island_margin: FloatProperty()
+
     def execute(self, context):
         obj = context.active_object
         if not obj:
@@ -292,7 +421,11 @@ class MapGenerateUV(Operator):
         else:
             obj.data.uv_layers.active_index = idx        
 
-        bpy.ops.uv.smart_project(island_margin=0.01, stretch_to_bounds=False)
+        print("Margin = ", self.island_margin)
+        bpy.ops.uv.smart_project(
+            island_margin=self.island_margin, 
+            stretch_to_bounds=False
+        )
 
         properties = Properties.get()
         properties.cao_uv_map = "NW_UVMap"
