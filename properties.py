@@ -15,7 +15,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 import bpy, os
-from bpy.props import EnumProperty, BoolProperty, IntProperty, PointerProperty, StringProperty
+from bpy.props import EnumProperty, BoolProperty, IntProperty, PointerProperty, StringProperty, FloatProperty
 from bpy.types import PropertyGroup, WindowManager
 
 from . utils                import (categories, list_to_enum, 
@@ -47,6 +47,25 @@ class Properties(PropertyGroup):
         ('2', "Cursor/XY", "")
     )
 
+    texture_size_type = (
+        ('512', "512", ""),
+        ('1024', "1024", ""),
+        ('2048', "2048", ""),
+        ('4096', "4096", ""),
+        ('8192', "8192", ""),
+    )
+
+    cao_export_location_type = (
+        ('0', "Blend", "Store in .blend folder"),
+        ('1', "Sub", "Store in subfolder to .blend"),
+        ('2', "User", "User specified folder")
+    )
+
+    cao_analyze_mode_type = (
+        ('Index', "Index", "Detect edges by index"),
+        ('Vertex', "Vertex", "Detect edges by vertex position"),
+        ('Deep', "Deep", "Detailed edge analysis (heavy)")
+    )
 
     # Export object properties.
     eobj_categories: EnumProperty(
@@ -108,6 +127,45 @@ class Properties(PropertyGroup):
         items=lambda _, __: list_to_enum(categories(ASSET_TYPE_MATERIAL))
     )
     nw_new_category: StringProperty(name="", description="Put new category name in here")
+
+
+    # Curvature & AO settings.
+    cao_export_location: EnumProperty(name="Export location", items=cao_export_location_type, default="1")
+    cao_export_subfolder: StringProperty(name="", default="textures", description="Sub folder to .blend")
+    cao_export_userfolder: StringProperty(name="", description="Folder for textures")
+    cao_export_map_basename: StringProperty(name="", default="mask", description="Map base name (_ao and _curv is appended automatically)")
+
+    cao_uv_map: EnumProperty(
+        name="UV Map", 
+        items=lambda self, context: self.active_uv_maps(context)
+    )
+    cao_uv_map_distance_auto: BoolProperty(name="Auto island distance", default=True)
+    cao_uv_map_distance: FloatProperty(name="Island distance", default=0.01)
+
+    cao_ao_size: EnumProperty(name="AO Size", items=texture_size_type, default="512")
+    cao_ao_quality: IntProperty(name="Quality", min=1, max=128, default=16)
+    cao_ao_distance: FloatProperty(name="Distance", min=0.001, max=100, default=0.25)
+    cao_ao_local: BoolProperty(name="Local only", default=True)
+    cao_ao_margin: IntProperty(name="Bake margin", default=16)
+
+    cao_curv_size: EnumProperty(name="Curv Size", items=texture_size_type, default="2048")
+    cao_analyze_mode: EnumProperty(name="Analyze Mode", items=cao_analyze_mode_type, default="Vertex")
+    cao_curv_min_angle: IntProperty(name="Min Angle", min=0, max=90, default=5)
+    cao_curv_line_thickness: IntProperty(name="Line Thickness", min=1, max=128, default=16)
+
+
+    def active_uv_maps(self, context):
+        """
+        Create enum list for UV layers of currently selected object.
+        """
+        obj = context.active_object
+        layers = []
+        if obj:
+            for l in obj.data.uv_layers:
+                layers.append((l.name, l.name, ""))
+        if not layers:
+            layers.append(("__DUMMY__", "", ""))
+        return layers
 
 
     @staticmethod

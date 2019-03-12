@@ -18,6 +18,8 @@ import bpy, json
 
 from bpy.types              import Operator
 
+from . properties           import Properties
+
 class BakeAoMapOperator(Operator):
     """
     Render AO map by creating a temporary material which outputs the AO
@@ -237,5 +239,62 @@ class CurvatureMapOperator(Operator):
             "c:/tmp/curvature.json",
             context.active_object
             )
+
+        return {'FINISHED'}
+
+
+class AoNodeOperator(Operator):
+    """
+    Create AO map node
+    """
+    bl_idname = "asset_wizard.create_ao_node_op"
+    bl_label = "Create AO Node"
+    bl_description = "Generate AO node from current map settings"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+
+        return {'FINISHED'}
+
+
+class CurvatureNodeOperator(Operator):
+    """
+    Create curvature map node
+    """
+    bl_idname = "asset_wizard.create_curvature_node_op"
+    bl_label = "Create Curvature Node"
+    bl_description = "Generate curvature node from current map settings"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+
+        return {'FINISHED'}
+
+    
+class MapGenerateUV(Operator):
+    """
+    Generate UV map for the selected object.
+    """
+    bl_idname = "asset_wizard.map_generate_uv_op"
+    bl_label = "Generate UV Map"
+    bl_description = "Generate UV map for AO and curvature, named NW_UVMap"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        obj = context.active_object
+        if not obj:
+            return {'FINISHED'}
+
+        # Create if doesn't exist.
+        idx = obj.data.uv_layers.find("NW_UVMap")
+        if obj.data.uv_layers.find("NW_UVMap") == -1:
+            obj.data.uv_layers.active = obj.data.uv_layers.new(name="NW_UVMap")
+        else:
+            obj.data.uv_layers.active_index = idx        
+
+        bpy.ops.uv.smart_project(island_margin=0.01, stretch_to_bounds=False)
+
+        properties = Properties.get()
+        properties.cao_uv_map = "NW_UVMap"
 
         return {'FINISHED'}

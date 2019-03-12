@@ -30,7 +30,7 @@ from . importer_ops         import (AppendObjectOperator, LinkObjectOperator,
 from . render_previews_ops  import RenderPreviewsOperator,RenderAllPreviewsOperator        
 from . generate_ops         import GeneratePBROperator, GenerateImageOperator, ExportPBROperator, ExportMaterialOperator             
 from . node_importer_ops    import NodeImporter  
-from . ao_curv_calc_ops     import BakeAoMapOperator, CurvatureMapOperator
+from . ao_curv_calc_ops     import BakeAoMapOperator, CurvatureMapOperator, AoNodeOperator, CurvatureNodeOperator, MapGenerateUV
 from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTextureBasedSetupOperator,
                                         GenerateTwoLayerShaderBasedSetupOperator, ImportDistortionOperator,
                                         ImportBlurOperator, ImportTextureBoxMapUVW, ImportExtNoise,
@@ -358,21 +358,87 @@ class NodeWizardPanel(Panel):
         )
         col.row().operator(NodeImporter.bl_idname, text="Add Material", icon="ADD").group = properties.nw_materials_previews
 
-        #########################################
+
+class NodeWizardMapPanel(Panel):
+    """
+    The panel for node wizard map generator (nodes space).
+    """
+    bl_space_type = "NODE_EDITOR"
+    bl_region_type = "UI"
+    bl_label = "Node Wizard Map Generator"
+    bl_category = "Asset Wizard"  
+
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.type == 'NODE_EDITOR' and \
+            context.space_data.node_tree is not None and \
+            context.space_data.tree_type == 'ShaderNodeTree'
+
+    def draw(self, context):
+        prefs = PreferencesPanel.get()
+        compact = prefs.compact_panels
+        preview_scale = 5.0 * prefs.preview_scale
+        properties = Properties.get()
+        layout = self.layout
+
+        box = layout.box()
+        if properties.cao_uv_map != "__DUMMY__":
+            if not compact:
+                box.label(text="Export Location:")
+
+            col = box.column(align=True)
+            col.row(align=True).prop(properties, "cao_export_location", expand=True)
+            if properties.cao_export_location == '1':
+                col.row(align=True).prop(properties, "cao_export_subfolder")
+            elif properties.cao_export_location == '2':
+                # TODO: Directory chooser ..
+                col.row(align=True).prop(properties, "cao_export_userfolder")
+            col.row(align=True).prop(properties, "cao_export_map_basename")
 
         if not compact:
             box = layout.box()
-            box.label(text="AO and Curvature")
+            box.label(text="UV Map")
 
-        row = box.row(align=True)
-        split = row.split(factor=0.5, align=True)
-        split.operator(BakeAoMapOperator.bl_idname)
-        split.operator(CurvatureMapOperator.bl_idname)
+        col = box.column(align=True)
+        if properties.cao_uv_map != "__DUMMY__":
+            col.row(align=True).prop(properties, "cao_uv_map")
+        else:
+            col.row().label(text="UV map required, object has none")
+        col.row(align=True).prop(properties, "cao_uv_map_distance_auto")
+        if not properties.cao_uv_map_distance_auto:
+            col.row(align=True).prop(properties, "cao_uv_map_distance")
+        col.row(align=True).operator(MapGenerateUV.bl_idname)
+
+        if properties.cao_uv_map != "__DUMMY__":
+            if not compact:
+                box = layout.box()
+                box.label(text="AO Mask")
+
+            col = box.column(align=True)
+            col.row(align=True).prop(properties, "cao_ao_size", expand=True)
+            col.row(align=True).prop(properties, "cao_ao_quality")
+            col.row(align=True).prop(properties, "cao_ao_distance")
+            col.row(align=True).prop(properties, "cao_ao_margin")
+            col.row(align=True).prop(properties, "cao_ao_local")
+            col.operator(BakeAoMapOperator.bl_idname)
+            col.operator(AoNodeOperator.bl_idname)
+
+            if not compact:
+                box = layout.box()
+                box.label(text="Curvature Mask")        
+
+            col = box.column(align=True)
+            col.row(align=True).prop(properties, "cao_curv_size", expand=True)
+            col.row(align=True).prop(properties, "cao_analyze_mode", expand=True)
+            col.row(align=True).prop(properties, "cao_curv_min_angle")
+            col.row(align=True).prop(properties, "cao_curv_line_thickness")
+            col.operator(CurvatureMapOperator.bl_idname)
+            col.operator(CurvatureNodeOperator.bl_idname)
 
 
 class NodeWizardExportPanel(Panel):
     """
-    The panel for node wizard (nodes space).
+    The panel for node wizard export (nodes space).
     """
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"

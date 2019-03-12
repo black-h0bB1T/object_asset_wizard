@@ -20,7 +20,7 @@ from . preferences          import PreferencesPanel
 from . properties           import Properties
 from . preview_parsers      import CollectionImageParser, NodesParser
 from . preview_helper       import PreviewHelper
-from . panels               import ImportPanel, ExportPanel, NodeWizardPanel, NodeWizardExportPanel
+from . panels               import ImportPanel, ExportPanel, NodeWizardPanel, NodeWizardMapPanel, NodeWizardExportPanel
 from . create_category_ops  import CreateCategoryOperator
 from . exporter_ops         import UseObjectNameOperator, OverwriteObjectExporterOperator, ObjectExporterOperator
 from . importer_ops         import (AppendObjectOperator, LinkObjectOperator, 
@@ -28,7 +28,7 @@ from . importer_ops         import (AppendObjectOperator, LinkObjectOperator,
 from . render_previews_ops  import ModalTimerOperator, RenderPreviewsOperator, RenderAllPreviewsOperator   
 from . generate_ops         import GeneratePBROperator, GenerateImageOperator, ExportPBROperator, ExportMaterialOperator             
 from . node_importer_ops    import NodeImporter   
-from . ao_curv_calc_ops     import BakeAoMapOperator, CurvatureMapOperator
+from . ao_curv_calc_ops     import BakeAoMapOperator, CurvatureMapOperator, AoNodeOperator, CurvatureNodeOperator, MapGenerateUV
 from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTextureBasedSetupOperator,
                                         GenerateTwoLayerShaderBasedSetupOperator, ImportDistortionOperator,
                                         ImportBlurOperator, ImportTextureBoxMapUVW, ImportExtNoise,
@@ -111,6 +111,7 @@ ops = [
     ImportPanel,
     ExportPanel,
     NodeWizardPanel,
+    NodeWizardMapPanel,
     NodeWizardExportPanel,
     CreateCategoryOperator,
     UseObjectNameOperator,
@@ -132,6 +133,9 @@ ops = [
     NodeImporter,
     BakeAoMapOperator,
     CurvatureMapOperator,
+    AoNodeOperator,
+    CurvatureNodeOperator,
+    MapGenerateUV,
     DX2OGLConverterOperator, 
     GenerateTwoLayerTextureBasedSetupOperator,
     GenerateTwoLayerShaderBasedSetupOperator, 
