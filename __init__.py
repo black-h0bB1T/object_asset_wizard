@@ -43,6 +43,7 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 #   Preview size in panels can now be scaled from preferences
 #   Fix in preferences (use of __package__)
 #   Near and far clipping clipping plane of preview camera adjusted to allow smaller and larger objects
+#   Curvature and AO map generator added to Node Wizard
 # 0.1.2
 #   Better view on objects in preview
 #   Support for multiple material in one .blend added
@@ -74,8 +75,7 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 # +TODO: --Release
 # +TODO: Preview scale adjustable
 # +TODO: Change near and far clipping setting in preview.blend
-# TODO: NW: Quick bake curvature mask: https://www.youtube.com/watch?v=RhMEBKuPYXY&feature=youtu.be
-#       Freestyle? + http://www.neilblevins.com/cg_education/vertex_map_wear/vertex_map_wear.htm#CurveMap
+# +TODO: NW: Quick bake curvature and AO mask
 # TODO: Sub-categories
 # TODO: ?Adjustable rows/columns for previews (possible?)
 # TODO: Append object at cursor, optionally lock Move Z & Rotate XY
