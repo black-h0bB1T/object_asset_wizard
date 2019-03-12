@@ -30,7 +30,7 @@ from . importer_ops         import (AppendObjectOperator, LinkObjectOperator,
 from . render_previews_ops  import RenderPreviewsOperator,RenderAllPreviewsOperator        
 from . generate_ops         import GeneratePBROperator, GenerateImageOperator, ExportPBROperator, ExportMaterialOperator             
 from . node_importer_ops    import NodeImporter  
-from . ao_curv_calc_ops     import BakeAoMapOperator, CurvatureMapOperator, AoNodeOperator, CurvatureNodeOperator, MapGenerateUV
+from . ao_curv_calc_ops     import BakeAoMapOperator, CurvatureMapOperator, AoNodeOperator, CurvatureNodeOperator, MapGenerateUV, UseObjectNameForMap
 from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTextureBasedSetupOperator,
                                         GenerateTwoLayerShaderBasedSetupOperator, ImportDistortionOperator,
                                         ImportBlurOperator, ImportTextureBoxMapUVW, ImportExtNoise,
@@ -175,7 +175,7 @@ class ExportPanel(Panel):
         if categories(ASSET_TYPE_OBJECT):
             if not compact:
                 box.row().label(text="Target Rotation & Location:")
-                box.row().prop(properties, "eobj_rotation", expand=True)
+                box.row().prop(properties, "eobj_rotation", expand=True, toggle=True)
                 box.row().prop(properties, "eobj_location", expand=True)
                 box.row().label(text="Rename Objects:")
                 box.row().prop(properties, "eobj_rename", expand=True)
@@ -183,7 +183,7 @@ class ExportPanel(Panel):
                 box.row().prop(properties, "eobj_rename_material", expand=True)      
             else:
                 col = box.column(align=True)
-                col.row(align=True).prop(properties, "eobj_rotation", expand=True)
+                col.row(align=True).prop(properties, "eobj_rotation", expand=True, toggle=True)
                 col.row(align=True).prop(properties, "eobj_location", expand=True)
                 col.row(align=True).prop(properties, "eobj_rename", expand=True)
                 col.row(align=True).prop(properties, "eobj_rename_material", expand=True)      
@@ -207,7 +207,7 @@ class ExportPanel(Panel):
             col.row(align=True).prop(properties, "eobj_export_type", expand=True)
             split = col.row(align=True).split(factor=0.9, align=True)
             split.prop(properties, "eobj_asset_name", expand=True)
-            split.operator(UseObjectNameOperator.bl_idname, icon="URL")
+            split.operator(UseObjectNameOperator.bl_idname, icon="URL", text="")
 
             # Select operator depending if output file already exists.
             if export_file_exists(
@@ -215,9 +215,9 @@ class ExportPanel(Panel):
                 properties.eobj_categories, 
                 properties.eobj_asset_name, 
                 Properties.export_type_ext(properties.eobj_export_type)):
-                op = col.row().operator(OverwriteObjectExporterOperator.bl_idname, icon="EXPORT")
+                op = col.row(align=True).operator(OverwriteObjectExporterOperator.bl_idname, icon="EXPORT")
             else:
-                op = col.row().operator(ObjectExporterOperator.bl_idname, icon="EXPORT")
+                op = col.row(align=True).operator(ObjectExporterOperator.bl_idname, icon="EXPORT")
             op.category = properties.eobj_categories
             op.asset_name = properties.eobj_asset_name
             op.location = properties.eobj_location
@@ -393,7 +393,9 @@ class NodeWizardMapPanel(Panel):
             elif properties.cao_export_location == '2':
                 # TODO: Directory chooser ..
                 col.row(align=True).prop(properties, "cao_export_userfolder")
-            col.row(align=True).prop(properties, "cao_export_map_basename")
+            split = col.row(align=True).split(factor=0.9, align=True)
+            split.prop(properties, "cao_export_map_basename")
+            split.operator(UseObjectNameForMap.bl_idname, icon="URL", text="")
 
         if not compact:
             box = layout.box()
@@ -404,7 +406,7 @@ class NodeWizardMapPanel(Panel):
             col.row(align=True).prop(properties, "cao_uv_map")
         else:
             col.row().label(text="UV map required, object has none")
-        col.row(align=True).prop(properties, "cao_uv_map_distance_auto")
+        col.row(align=True).prop(properties, "cao_uv_map_distance_auto", toggle=True)
         if not properties.cao_uv_map_distance_auto:
             col.row(align=True).prop(properties, "cao_uv_map_distance")
         col.row(align=True).operator(MapGenerateUV.bl_idname)
@@ -419,7 +421,12 @@ class NodeWizardMapPanel(Panel):
             col.row(align=True).prop(properties, "cao_ao_quality")
             col.row(align=True).prop(properties, "cao_ao_distance")
             col.row(align=True).prop(properties, "cao_ao_margin")
-            col.row(align=True).prop(properties, "cao_ao_local")
+            col.row(align=True).prop(
+                properties, 
+                "cao_ao_local", 
+                toggle=True,
+                text="Local only" if properties.cao_ao_local else "Global"
+            )
             col.operator(BakeAoMapOperator.bl_idname)
             col.operator(AoNodeOperator.bl_idname)
 

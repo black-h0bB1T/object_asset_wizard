@@ -28,7 +28,7 @@ from . importer_ops         import (AppendObjectOperator, LinkObjectOperator,
 from . render_previews_ops  import ModalTimerOperator, RenderPreviewsOperator, RenderAllPreviewsOperator   
 from . generate_ops         import GeneratePBROperator, GenerateImageOperator, ExportPBROperator, ExportMaterialOperator             
 from . node_importer_ops    import NodeImporter   
-from . ao_curv_calc_ops     import BakeAoMapOperator, CurvatureMapOperator, AoNodeOperator, CurvatureNodeOperator, MapGenerateUV
+from . ao_curv_calc_ops     import BakeAoMapOperator, CurvatureMapOperator, AoNodeOperator, CurvatureNodeOperator, MapGenerateUV, UseObjectNameForMap
 from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTextureBasedSetupOperator,
                                         GenerateTwoLayerShaderBasedSetupOperator, ImportDistortionOperator,
                                         ImportBlurOperator, ImportTextureBoxMapUVW, ImportExtNoise,
@@ -135,6 +135,7 @@ ops = [
     CurvatureMapOperator,
     AoNodeOperator,
     CurvatureNodeOperator,
+    UseObjectNameForMap,
     MapGenerateUV,
     DX2OGLConverterOperator, 
     GenerateTwoLayerTextureBasedSetupOperator,

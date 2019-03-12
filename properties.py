@@ -58,7 +58,7 @@ class Properties(PropertyGroup):
     cao_export_location_type = (
         ('0', "Blend", "Store in .blend folder"),
         ('1', "Sub", "Store in subfolder to .blend"),
-        ('2', "User", "User specified folder")
+        #('2', "User", "User specified folder")
     )
 
     cao_analyze_mode_type = (
@@ -131,12 +131,12 @@ class Properties(PropertyGroup):
 
     # Curvature & AO settings.
     cao_export_location: EnumProperty(name="Export location", items=cao_export_location_type, default="1")
-    cao_export_subfolder: StringProperty(name="", default="textures", description="Sub folder to .blend")
-    cao_export_userfolder: StringProperty(name="", description="Folder for textures")
+    cao_export_subfolder: StringProperty(name="", default="maps", description="Sub folder to .blend")
+    cao_export_userfolder: StringProperty(name="", description="Folder for maps")
     cao_export_map_basename: StringProperty(name="", default="mask", description="Map base name (_ao and _curv is appended automatically)")
 
     cao_uv_map: EnumProperty(
-        name="UV Map", 
+        name="", 
         items=lambda self, context: self.active_uv_maps(context)
     )
     cao_uv_map_distance_auto: BoolProperty(name="Auto island distance", default=True)

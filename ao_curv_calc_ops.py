@@ -298,3 +298,22 @@ class MapGenerateUV(Operator):
         properties.cao_uv_map = "NW_UVMap"
 
         return {'FINISHED'}
+
+
+class UseObjectNameForMap(Operator):
+    """
+    Fills the name of the current object to the map name in CAO map generator.
+    """
+    bl_idname = "asset_wizard.use_object_name_for_map_op"
+    bl_label = "Use Object Name"
+    bl_description = "Use active object name as map name"
+    bl_options = {'REGISTER'}    
+
+    def execute(self, context):
+        obj = context.active_object
+        if not obj:
+            return {'FINISHED'}
+
+        Properties.get().cao_export_map_basename = obj.name
+
+        return {'FINISHED'}
