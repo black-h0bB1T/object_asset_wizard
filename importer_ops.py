@@ -15,7 +15,9 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 import bpy, os
-from bpy.types import Operator
+
+from bpy.types              import Operator
+from mathutils              import Vector
 
 from . properties           import Properties
 from . execute_blender      import execute_blender
@@ -33,7 +35,7 @@ class ImportBase:
         [ o.select_set(True) for o in collection.objects ]
         [ select_children(c) for c in collection.children ]
 
-    def append_objects(self, importFile, link=False):
+    def append_objects(self, importFile, link=False, at_cursor=False, lock_xy=False):
         """
         Append objects from import file to scene.
         """
@@ -51,8 +53,18 @@ class ImportBase:
             coll = bpy.data.collections.new(collName)
 
             # Append all objects to it.
+            offset = bpy.context.scene.cursor_location if at_cursor else Vector((0, 0, 0))
             for l in links:
                 coll.objects.link(l)
+
+                # Do this only, if not parented to another object!
+                if l.parent == None:
+                    l.location += offset
+                    
+                if lock_xy:
+                    l.lock_location[2] = True
+                    l.lock_rotation[0] = True
+                    l.lock_rotation[1] = True
 
             # Append new collection to active collection.
             activeCol = bpy.context.collection
@@ -92,7 +104,14 @@ class AppendObjectOperator(Operator, ImportBase):
     def execute(self, context):
         # Deselect all objects.
         [ o.select_set(False) for o in context.scene.objects ]
-        self.append_objects(Properties.get().iobj_previews, False)
+
+        prop = Properties.get()
+        self.append_objects(
+            prop.iobj_previews, 
+            False,
+            prop.iobj_at_cursor,
+            prop.iobj_lock_xy
+        )
         return{'FINISHED'}
 
 

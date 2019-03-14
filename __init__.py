@@ -97,7 +97,7 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 
 bl_info = {
     "name" : "Asset Wizard",
-    "version": (0, 1, 3),
+    "version": (0, 1, 4),
     "author" : "h0bB1T",
     "description" : "Asset import and export utility.",
     "blender" : (2, 80, 0),

@@ -90,6 +90,9 @@ class ImportPanel(Panel):
                     if not is_fbx:
                         split.operator(LinkObjectOperator.bl_idname, icon="LINK_BLEND")
                         split.operator(OpenObjectOperator.bl_idname, icon="FILE")
+                    split = col.row(align=True).split(factor=0.5, align=True)
+                    split.prop(properties, "iobj_at_cursor", toggle=True, icon="PIVOT_CURSOR")
+                    split.prop(properties, "iobj_lock_xy", toggle=True, icon="VIEW_PERSPECTIVE")
                 else:
                     col.label(text="No object in this category yet")
                     col.row().operator(RefreshObjectPreviews.bl_idname, icon="FILE_REFRESH")

@@ -99,6 +99,8 @@ class Properties(PropertyGroup):
     iobj_previews: EnumProperty(
         items=lambda _, __: PreviewHelper.getCollection(ASSET_TYPE_OBJECT).items
     )
+    iobj_at_cursor: BoolProperty(name="At Cursor", description="Move imported objects to cursor position", default=False)
+    iobj_lock_xy: BoolProperty(name="Lock XY", description="Lock in XY plane (move & rotation)")
     imat_categories: EnumProperty(
         name="", 
         description="Material category",
