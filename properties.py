@@ -70,7 +70,8 @@ class Properties(PropertyGroup):
     # Export object properties.
     eobj_categories: EnumProperty(
         name="", 
-        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_OBJECT))
+        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_OBJECT)),
+        description="Export to this category"
         )
     eobj_asset_name: StringProperty(name="", default="Asset")
     eobj_location: EnumProperty(
@@ -86,6 +87,12 @@ class Properties(PropertyGroup):
     eobj_rename: EnumProperty(name="Rename", items=export_rename_type, default="2")
     eobj_rename_material: EnumProperty(name="Rename", items=export_rename_type, default="2")
     eobj_export_type: EnumProperty(name="Export", items=export_type)
+
+    eobj_new_categories: EnumProperty(
+        name="", 
+        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_OBJECT), True),
+        description="Create new subdirectory here"
+        )
     eobj_new_category: StringProperty(name="", description="Put new category name in here")
 
 
@@ -126,9 +133,15 @@ class Properties(PropertyGroup):
     
     nw_categories: EnumProperty(
         name="", 
-        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_MATERIAL))
+        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_MATERIAL)),
+        description="Export to this category"
     )
     nw_new_category: StringProperty(name="", description="Put new category name in here")
+    nw_new_categories: EnumProperty(
+        name="", 
+        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_MATERIAL), True),
+        description="Create new subdirectory here"
+        )
 
 
     # Curvature & AO settings.

@@ -39,11 +39,16 @@ from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview,
 from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
                                         ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
 
+# 0.1.4
+#   Append/Add object at cursor position
+#   Lock appended object in XY plane (Move in Z and rotation in X/Y axis is locked for these objects)
+#   Both object and materials can now have subdirectories
+#   Categories are now cached an don't need to be rescanned on every panel redraw
 # 0.1.3
+#   Curvature and AO map generator added to Node Wizard
 #   Preview size in panels can now be scaled from preferences
 #   Fix in preferences (use of __package__)
 #   Near and far clipping clipping plane of preview camera adjusted to allow smaller and larger objects
-#   Curvature and AO map generator added to Node Wizard
 # 0.1.2
 #   Better view on objects in preview
 #   Support for multiple material in one .blend added
@@ -76,9 +81,10 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 # +TODO: Preview scale adjustable
 # +TODO: Change near and far clipping setting in preview.blend
 # +TODO: NW: Quick bake curvature and AO mask
-# TODO: Sub-categories
+# +TODO: Append object at cursor, optionally lock Move Z & Rotate XY
+# +TODO: Sub-categories
+
 # TODO: ?Adjustable rows/columns for previews (possible?)
-# TODO: Append object at cursor, optionally lock Move Z & Rotate XY
 # TODO: Some default settings (e.g. for exporter) should be adjustable in prefs
 # TODO: NW: One click create paint texture for mask
 # TODO: NW: Better Masks

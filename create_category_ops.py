@@ -21,7 +21,7 @@ from bpy.types              import Operator
 
 from . preferences          import PreferencesPanel
 from . properties           import Properties
-from . utils                import ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL
+from . utils                import ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL, CategoriesCache
 
 class CreateCategoryOperator(Operator):
     bl_idname = "asset_wizard.create_category_op"
@@ -31,18 +31,24 @@ class CreateCategoryOperator(Operator):
 
     asset_type: StringProperty()
     category: StringProperty()
+    top_category: StringProperty()
 
     def execute(self, context):
-        path = os.path.join(PreferencesPanel.get().root, self.asset_type, self.category)
+        tcat = "" if self.top_category == "<ROOT>" else self.top_category
+        path = os.path.join(PreferencesPanel.get().root, self.asset_type, tcat, self.category)
         if not os.path.exists(path):
             os.makedirs(path)
             self.report({'INFO'}, "Category created.")
 
+            CategoriesCache.update_cache(self.asset_type)
+            newcat = os.path.join(self.top_category, self.category)
             if self.asset_type == ASSET_TYPE_OBJECT:
-                Properties.get().iobj_categories = self.category
-                Properties.get().eobj_categories = self.category
+                Properties.get().iobj_categories = newcat
+                Properties.get().eobj_categories = newcat
+                Properties.get().eobj_new_categories = newcat
             if self.asset_type == ASSET_TYPE_MATERIAL:
-                Properties.get().imat_categories = self.category
-                Properties.get().nw_categories = self.category
+                Properties.get().imat_categories = newcat
+                Properties.get().nw_categories = newcat
+                Properties.get().nw_new_categories = newcat
 
         return {'FINISHED'}

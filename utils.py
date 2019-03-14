@@ -26,27 +26,55 @@ PREVIEW_EXT = ".png"
 FORMATS = (".blend", ".fbx")
 
 
+class CategoriesCache:
+    """
+    Caches the different directory structures, so they must not be parsed that often.
+    """
+    cache = {
+        ASSET_TYPE_OBJECT: [],
+        ASSET_TYPE_MATERIAL: []
+    }
+
+    @staticmethod
+    def rec_scan_structure(asset_type, basedir=""):
+        """
+        Return categories (e.g. sub-dirs) from given asset_type (objects, materials, ...).
+        """
+        path = os.path.join(PreferencesPanel.get().root, asset_type, basedir)
+        cats = []
+        if os.path.exists(path):
+            for e in sorted(os.listdir(path)):
+                p = os.path.join(path, e)
+                if os.path.isdir(p) and not e.startswith('.'):
+                    cats.append(os.path.join(basedir, e))
+                if os.path.isdir(p):
+                    cats += (CategoriesCache.rec_scan_structure(asset_type, os.path.join(basedir, e)))
+        return cats
+
+
+    @staticmethod 
+    def update_cache(asset_type):
+        CategoriesCache.cache[asset_type] = CategoriesCache.rec_scan_structure(asset_type)
+
+
+    @staticmethod
+    def categories(asset_type):
+        if not CategoriesCache.cache[asset_type]:
+            CategoriesCache.update_cache(asset_type)
+        return CategoriesCache.cache[asset_type]
+
+
 def categories(asset_type):
-    """
-    Return categories (e.g. sub-dirs) from given asset_type (objects, materials, ...).
-    """
-    path = os.path.join(PreferencesPanel.get().root, asset_type)
-    categories = []
-    if os.path.exists(path):
-        for e in sorted(os.listdir(path)):
-            p = os.path.join(path, e)
-            if os.path.isdir(p) and not e.startswith('.'):
-                categories.append(e)
-    return categories    
+    return CategoriesCache.categories(asset_type)
 
 
-def list_to_enum(lst):
+def list_to_enum(lst, include_root=False):
     """
     Convert a list of strings to a EnumProperty list (s, s, '', #).
     """
-    r = []
-    for id, item in enumerate(lst):
-        r.append((item, item, '', id))
+    r = [ ("<ROOT>", "<ROOT>", '', 0) ] if include_root else []
+    for item in lst:
+        r.append((item, item, '', len(r)))
     return r
 
 

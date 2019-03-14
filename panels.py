@@ -196,18 +196,20 @@ class ExportPanel(Panel):
                 box.row().label(text="Output Category:")
 
             col = box.column(align=True)
-            col.row(align=True).prop(properties, "eobj_categories")
+            col.row(align=True).prop(properties, "eobj_new_categories")
             split = col.row(align=True).split(factor=0.9, align=True)
             split.prop(properties, "eobj_new_category")
             op = split.operator(CreateCategoryOperator.bl_idname, text="", icon='ADD')
             op.asset_type = ASSET_TYPE_OBJECT
             op.category = properties.eobj_new_category
+            op.top_category = properties.eobj_new_categories
 
             if not compact:
                 box.row().label(text="Export Settings:")
 
             col = box.column(align=True)
             col.row(align=True).prop(properties, "eobj_export_type", expand=True)
+            col.row(align=True).prop(properties, "eobj_categories")
             split = col.row(align=True).split(factor=0.9, align=True)
             split.prop(properties, "eobj_asset_name", expand=True)
             split.operator(UseObjectNameOperator.bl_idname, icon="URL", text="")
@@ -231,11 +233,13 @@ class ExportPanel(Panel):
         else:
             box.label(text="No object categories yet, create one")
             col = box.column(align=True)
+            col.row(align=True).prop(properties, "eobj_new_categories")
             split = col.row(align=True).split(factor=0.9, align=True)
             split.prop(properties, "eobj_new_category")
             op = split.operator(CreateCategoryOperator.bl_idname, text="", icon='ADD')
             op.asset_type = ASSET_TYPE_OBJECT
             op.category = properties.eobj_new_category
+            op.top_category = properties.eobj_new_categories
 
 
 class NodeWizardPanel(Panel):
@@ -551,14 +555,17 @@ class NodeWizardExportPanel(Panel):
                 box.label(text="Asset Material Generator")
 
             col = box.column(align=True)
-            col.row(align=True).prop(properties, "nw_categories")
+            col.row(align=True).prop(properties, "nw_new_categories")
             split = col.row(align=True).split(factor=0.9, align=True)
             split.prop(properties, "nw_new_category")
             op = split.operator(CreateCategoryOperator.bl_idname, text="", icon="ADD")
             op.asset_type = ASSET_TYPE_MATERIAL
             op.category = properties.nw_new_category
+            op.top_category = properties.nw_new_categories
 
-            split = box.row(align=True).split(factor=0.5, align=True)
+            col = box.column(align=True)
+            col.row(align=True).prop(properties, "nw_categories")
+            split = col.row(align=True).split(factor=0.5, align=True)
             op = split.operator(ExportMaterialOperator.bl_idname, icon="EXPORT")
             op.category = properties.nw_categories
             op = split.operator(ExportPBROperator.bl_idname, icon="EXPORT")
@@ -569,9 +576,11 @@ class NodeWizardExportPanel(Panel):
         else:
             box.label(text="No material categories yet, create one")
             col = box.column(align=True)
+            col.row(align=True).prop(properties, "nw_new_categories")
             split = col.row(align=True).split(factor=0.9, align=True)
             split.prop(properties, "nw_new_category")
             op = split.operator(CreateCategoryOperator.bl_idname, text="", icon="ADD")
             op.asset_type = ASSET_TYPE_MATERIAL
             op.category = properties.nw_new_category
+            op.top_category = properties.nw_new_categories
 
