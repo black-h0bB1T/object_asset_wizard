@@ -264,6 +264,11 @@ class CurvatureMapOperator(Operator):
     
 
     def execute(self, context):
+        # Output path must exist (does nothing if exists).
+        path = os.path.split(self.export_path)[0]
+        if not os.path.exists(path):
+            os.makedirs(path)
+            
         json_file = os.path.splitext(self.export_path)[0] + ".json"
         self.export_mesh(context.active_object, json_file)
 
