@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
-import bpy
+import bpy, platform, os, stat
 
 from . preferences          import PreferencesPanel
 from . properties           import Properties
@@ -39,6 +39,11 @@ from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview,
 from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
                                         ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
 
+# 0.1.5
+#   Error fixes:
+#   - Append at cursor (Blender API change)
+#   - Wrong library when creating root category
+#   - curvature executable flag on Linux
 # 0.1.4
 #   Append/Add object at cursor position
 #   Lock appended object in XY plane (Move in Z and rotation in X/Y axis is locked for these objects)
@@ -84,6 +89,7 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 # +TODO: Append object at cursor, optionally lock Move Z & Rotate XY
 # +TODO: Sub-categories
 
+# TODO: Fix linux curvature library dependency (GLIBC) bug
 # TODO: ?Adjustable rows/columns for previews (possible?)
 # TODO: Some default settings (e.g. for exporter) should be adjustable in prefs
 # TODO: NW: One click create paint texture for mask
@@ -185,6 +191,15 @@ def register():
         PreviewHelper.addCollection(asset_type, NodesParser(), mod)        
 
     Properties.initialize()
+
+    # On Linux, guarantee curvature has execute rights.
+    if platform.system() == "Linux":
+        os.chmod(
+            os.path.join(os.path.dirname(__file__), "data", "tools", "curvature"),
+            stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH |
+            stat.S_IWUSR | stat.S_IWGRP |
+            stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+        )
 
 def unregister():
     Properties.cleanup()

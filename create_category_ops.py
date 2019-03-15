@@ -41,7 +41,7 @@ class CreateCategoryOperator(Operator):
             self.report({'INFO'}, "Category created.")
 
             CategoriesCache.update_cache(self.asset_type)
-            newcat = os.path.join(self.top_category, self.category)
+            newcat = os.path.join(tcat, self.category)
             if self.asset_type == ASSET_TYPE_OBJECT:
                 Properties.get().iobj_categories = newcat
                 Properties.get().eobj_categories = newcat

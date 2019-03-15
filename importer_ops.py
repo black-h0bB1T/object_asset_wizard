@@ -53,7 +53,7 @@ class ImportBase:
             coll = bpy.data.collections.new(collName)
 
             # Append all objects to it.
-            offset = bpy.context.scene.cursor_location if at_cursor else Vector((0, 0, 0))
+            offset = bpy.context.scene.cursor.location if at_cursor else Vector((0, 0, 0))
             for l in links:
                 coll.objects.link(l)
 
