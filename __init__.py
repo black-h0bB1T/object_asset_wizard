@@ -39,6 +39,8 @@ from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview,
 from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
                                         ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
 
+# 0.1.7
+#   bl_idname added to panels
 # 0.1.6
 #   Error fixes:
 #   - Create directory if not exists when creating curvature mask
@@ -112,7 +114,7 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 
 bl_info = {
     "name" : "Asset Wizard",
-    "version": (0, 1, 6),
+    "version": (0, 1, 7),
     "author" : "h0bB1T",
     "description" : "Asset import and export utility.",
     "blender" : (2, 80, 0),

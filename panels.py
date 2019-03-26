@@ -43,6 +43,7 @@ class ImportPanel(Panel):
     """
     The panel for object and material import.
     """
+    bl_idname = "OBJECT_PT_assetwizard_import"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_label = "Asset Wizard Manager"
@@ -158,6 +159,7 @@ class ExportPanel(Panel):
     """
     The panel for object export.
     """
+    bl_idname = "OBJECT_PT_assetwizard_export"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_label = "Asset Wizard Exporter"
@@ -246,6 +248,7 @@ class NodeWizardPanel(Panel):
     """
     The panel for node wizard (nodes space).
     """
+    bl_idname = "MATERIAL_PT_assetwizard_nodewizard"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_label = "Node Wizard"
@@ -370,6 +373,7 @@ class NodeWizardMapPanel(Panel):
     """
     The panel for node wizard map generator (nodes space).
     """
+    bl_idname = "MATERIAL_PT_assetwizard_nodewizard_map"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_label = "Node Wizard Map Generator"
@@ -532,6 +536,7 @@ class NodeWizardExportPanel(Panel):
     """
     The panel for node wizard export (nodes space).
     """
+    bl_idname = "MATERIAL_PT_assetwizard_nodewizard_export"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_label = "Node Wizard Export"
