@@ -115,7 +115,7 @@ class ObjectExporterOperator(Operator, ExportObjectBase):
         for o in objects:
             original[o] = (
                 o.name,
-                o.data.name,
+                o.data.name if o.data else None,
                 (o.location.x, o.location.y, o.location.z),
                 (o.rotation_euler.x, o.rotation_euler.y, o.rotation_euler.z)
             )
@@ -129,7 +129,8 @@ class ObjectExporterOperator(Operator, ExportObjectBase):
         for o in original.keys():
             name, mname, loc, rot = original[o]
             o.name = name
-            o.data.name = mname
+            if o.data:
+                o.data.name = mname
             o.location = loc
             o.rotation_euler.x, o.rotation_euler.y, o.rotation_euler.z = rot
 
@@ -177,11 +178,15 @@ class ObjectExporterOperator(Operator, ExportObjectBase):
         """
         if self.rename == "1": # Prefix
             for o in objects:
-                o.name = o.data.name = "%s_%s" % (self.asset_name, o.name)
+                o.name = "%s_%s" % (self.asset_name, o.name)
+                if o.data:
+                    o.data.name = o.name
 
         if self.rename == "2": # Full
             for i, o in enumerate(objects):
-                o.name = o.data.name = "%s_%03i" % (self.asset_name, i)
+                o.name = "%s_%03i" % (self.asset_name, i)
+                if o.data:
+                    o.data.name = o.name
 
 
     def rename_materials(self, objects):

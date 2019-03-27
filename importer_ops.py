@@ -145,7 +145,7 @@ class SetMaterialOperator(Operator, ImportBase):
                 if len(o.material_slots) < 1:
                     o.data.materials.append(m)
                 else:
-                    o.material_slots[0].material = m
+                    o.material_slots[o.active_material_index].material = m
         return{'FINISHED'}        
 
 
