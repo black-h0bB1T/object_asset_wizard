@@ -39,6 +39,9 @@ from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview,
 from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
                                         ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
 
+# 0.1.9
+#   Curvature tool is now statically linked on Linux
+#   Packaging of 0.1.8 is wrong, this is fixed now.
 # 0.1.8
 #   Export of Empty objects is working now
 #   'Set'ting a material in Asset Wizard panel apply to the active material slot now.
@@ -117,7 +120,7 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 
 bl_info = {
     "name" : "Asset Wizard",
-    "version": (0, 1, 8),
+    "version": (0, 1, 9),
     "author" : "h0bB1T",
     "description" : "Asset import and export utility.",
     "blender" : (2, 80, 0),
