@@ -56,7 +56,7 @@ class NodeUtils:
         node = tree.nodes.new("ShaderNodeTexImage")
         node.image = bpy.data.images.load(fileName)
         if nonColor:
-            node.color_space = "NONE"
+            node.image.colorspace_settings.name = "Non-Color"
         if clip:
             node.extension = "CLIP"
         return node
