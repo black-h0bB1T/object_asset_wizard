@@ -226,7 +226,7 @@ class CurvatureMapOperator(Operator):
         """
         Create input file for curvature tool.
         """
-        m = obj.to_mesh(bpy.context.depsgraph, self.apply_modifiers)
+        m = obj.to_mesh(preserve_all_data_layers=False, depsgraph=None)
         m.calc_normals()
 
         mesh = {
@@ -260,7 +260,7 @@ class CurvatureMapOperator(Operator):
         with open(json_file, "w") as f:
             json.dump(mesh, f, indent=4, separators=(',', ': '))
 
-        bpy.data.meshes.remove(m)
+        obj.to_mesh_clear()
     
 
     def execute(self, context):

@@ -39,6 +39,8 @@ from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview,
 from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
                                         ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
 
+# 0.1.10
+#   Fixing Blender API incompatibility in 2.80 final (curvature export failure).
 # 0.1.9
 #   Curvature tool is now statically linked on Linux
 #   Packaging of 0.1.8 is wrong, this is fixed now.
@@ -120,7 +122,7 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 
 bl_info = {
     "name" : "Asset Wizard",
-    "version": (0, 1, 9),
+    "version": (0, 1, 10),
     "author" : "h0bB1T",
     "description" : "Asset import and export utility.",
     "blender" : (2, 80, 0),
