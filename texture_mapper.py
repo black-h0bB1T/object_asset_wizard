@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
-import os
+import os, re
 
 class TextureMapper:
     """
@@ -29,7 +29,10 @@ class TextureMapper:
     normal_ext = "normal,norm,nor,nrm".split(",")
     metal_ext = "metallic,metal,met".split(",")
     height_ext = "height,hgt".split(",")
+    valid_suffixes = "_1k|_2k|_4k|_8k"
 
+    def buildReg(self, name):
+        return "(.*)%s(%s)?$" % (name, self.valid_suffixes)
 
     def endsWithAny(self, name, exts):
         """
@@ -37,7 +40,7 @@ class TextureMapper:
         """
         name = name.lower()
         for e in exts:
-            if name.endswith(e):
+            if re.match(self.buildReg(e), name):
                 return True
         return False
 
@@ -86,7 +89,8 @@ class TextureMapper:
 
         # Check if selected texture matches at least any of the valid extensions.
         for ext in allExt:
-            if baseName.lower().endswith(ext):
-                self.parseTextures(path, baseName[0:-len(ext)])
+            match = re.match(self.buildReg(ext), baseName.lower())
+            if match: 
+                self.parseTextures(path, baseName[0:len(match.group(1))])
                 break
                 
