@@ -19,7 +19,7 @@ import bpy, os
 from bpy.types              import Panel, WindowManager
 from bpy.props              import EnumProperty, StringProperty
 
-from . utils                import categories, export_file, export_file_exists, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL
+from . utils                import categories, export_file, export_file_exists, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL, ASSET_TYPE_BASE_IMAGES
 from . preferences          import PreferencesPanel
 from . preview_helper       import PreviewHelper
 from . properties           import Properties
@@ -28,7 +28,7 @@ from . exporter_ops         import UseObjectNameOperator, OverwriteObjectExporte
 from . importer_ops         import (AppendObjectOperator, LinkObjectOperator, 
                                     SetMaterialOperator, AppendMaterialOperator, OpenObjectOperator, OpenMaterialOperator)
 from . render_previews_ops  import RenderPreviewsOperator,RenderAllPreviewsOperator        
-from . generate_ops         import GeneratePBROperator, GenerateImageOperator, ExportPBROperator, ExportMaterialOperator             
+from . generate_ops         import GeneratePBROperator, QuickGeneratePBROperator, GenerateImageOperator, ExportPBROperator, ExportMaterialOperator             
 from . node_importer_ops    import NodeImporter  
 from . ao_curv_calc_ops     import BakeAoMapOperator, CurvatureMapOperator, AoNodeOperator, CurvatureNodeOperator, MapGenerateUV, UseObjectNameForMap
 from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTextureBasedSetupOperator,
@@ -37,7 +37,8 @@ from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTex
                                         ImportExtMusgrave, ImportExtVoronoi, ImportMixNoise,
                                         ImportScalarMix, ImportIntensityVisualizer, ImportScalarMapper,
                                         ImportNormalDirection, ImportSlice)      
-from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview, RefreshMaterialPreviews, ReRenderMaterialPreview
+from . support_ops          import (RefreshObjectPreviews, ReRenderObjectPreview, RefreshMaterialPreviews, 
+                                        ReRenderMaterialPreview, RefreshBaseImagePreviews)
 
 class ImportPanel(Panel):
     """
@@ -271,6 +272,30 @@ class NodeWizardPanel(Panel):
         box = layout.box()
         if not compact:
             box.label(text="Material from Textures")
+
+        basecats = categories(ASSET_TYPE_BASE_IMAGES)
+        if basecats:
+            if not compact:
+                box.row().label(text="Objects")
+
+            col = box.column(align=True)
+            col.row(align=True).prop(properties, "nw_bimgs_categories")
+
+            if PreviewHelper.getCollection(ASSET_TYPE_BASE_IMAGES).items:
+                col.row(align=True).template_icon_view(
+                    properties, 
+                    "nw_bimgs_previews", 
+                    show_labels=True,
+                    scale=preview_scale
+                )
+                split = col.row(align=True).split(factor=0.5, align=True)
+                split.operator(RefreshBaseImagePreviews.bl_idname, icon="FILE_REFRESH")
+                op = split.operator(QuickGeneratePBROperator.bl_idname, icon="UV")
+                op.add_hslbc = properties.nw_add_hslbc
+                op.add_uv = properties.nw_add_uv
+                op.decal = properties.nw_decal
+        else:
+            box.label(text="No image categories yet")                            
 
         col = box.column(align=True)
         split = col.row(align=True).split(factor=0.5, align=True)

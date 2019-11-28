@@ -18,6 +18,7 @@ import bpy, os
 
 from . preferences          import PreferencesPanel
 from . utils                import parse_entry_list, split_entry
+from . texture_mapper       import find_base_images
 
 class CollectionImageParser:
     """
@@ -78,3 +79,27 @@ class NodesParser:
                         thumb = lst.collection.load(group, noIcon, 'IMAGE')
                     lst.items.append(("%s::%s" % (blend, group), group, "", thumb.icon_id, id))
                     id += 1
+
+class BaseImageParser:
+    """
+    Parses all base images from given directory (diffuse, basecolor, albedo),
+    which are used to easily create PBR nodes.
+    """                    
+
+    def parse(self, lst):
+        """
+        Parse the images and create preview images.
+        """
+        asset_type, category = lst.data
+        fp = os.path.join(PreferencesPanel.get().imgroot, category)
+        print("Parse base images: ", fp)
+
+        id = 0
+        for entry in find_base_images(fp):
+            if not lst.collection: # lazy init
+                lst.collection = bpy.utils.previews.new()
+
+            full, short = entry
+            thumb = lst.collection.load(full, full, 'IMAGE')
+            lst.items.append((full, short, short, thumb.icon_id, id))
+            id += 1

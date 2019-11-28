@@ -18,7 +18,7 @@ import bpy, platform, os, stat
 
 from . preferences          import PreferencesPanel
 from . properties           import Properties
-from . preview_parsers      import CollectionImageParser, NodesParser
+from . preview_parsers      import CollectionImageParser, NodesParser, BaseImageParser
 from . preview_helper       import PreviewHelper
 from . panels               import ImportPanel, ExportPanel, NodeWizardPanel, NodeWizardMapPanel, NodeWizardExportPanel
 from . create_category_ops  import CreateCategoryOperator
@@ -26,7 +26,7 @@ from . exporter_ops         import UseObjectNameOperator, OverwriteObjectExporte
 from . importer_ops         import (AppendObjectOperator, LinkObjectOperator, 
                                         SetMaterialOperator, AppendMaterialOperator, OpenObjectOperator, OpenMaterialOperator)
 from . render_previews_ops  import ModalTimerOperator, RenderPreviewsOperator, RenderAllPreviewsOperator   
-from . generate_ops         import GeneratePBROperator, GenerateImageOperator, ExportPBROperator, ExportMaterialOperator             
+from . generate_ops         import GeneratePBROperator, QuickGeneratePBROperator, GenerateImageOperator, ExportPBROperator, ExportMaterialOperator             
 from . node_importer_ops    import NodeImporter   
 from . ao_curv_calc_ops     import BakeAoMapOperator, CurvatureMapOperator, AoNodeOperator, CurvatureNodeOperator, MapGenerateUV, UseObjectNameForMap
 from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTextureBasedSetupOperator,
@@ -35,9 +35,10 @@ from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTex
                                         ImportExtMusgrave, ImportExtVoronoi, ImportMixNoise,
                                         ImportScalarMix, ImportIntensityVisualizer, ImportScalarMapper,
                                         ImportNormalDirection, ImportSlice)             
-from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview, RefreshMaterialPreviews, ReRenderMaterialPreview                                        
+from . support_ops          import (RefreshObjectPreviews, ReRenderObjectPreview, RefreshMaterialPreviews, 
+                                        ReRenderMaterialPreview, RefreshBaseImagePreviews)
 from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
-                                        ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
+                                        ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS, ASSET_TYPE_BASE_IMAGES)
 
 # 0.1.10
 #   Fixing Blender API incompatibility in 2.80 final (curvature export failure).
@@ -122,7 +123,7 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 
 bl_info = {
     "name" : "Asset Wizard",
-    "version": (0, 1, 10),
+    "version": (0, 1, 11),
     "author" : "h0bB1T",
     "description" : "Asset import and export utility.",
     "blender" : (2, 80, 0),
@@ -152,6 +153,7 @@ ops = [
     RenderPreviewsOperator,
     RenderAllPreviewsOperator,
     GeneratePBROperator, 
+    QuickGeneratePBROperator,
     GenerateImageOperator, 
     ExportPBROperator,
     ExportMaterialOperator,
@@ -180,6 +182,7 @@ ops = [
     RefreshObjectPreviews,
     ReRenderObjectPreview,
     RefreshMaterialPreviews,
+    RefreshBaseImagePreviews,
     ReRenderMaterialPreview,
 ]
 
@@ -201,7 +204,14 @@ def register():
         (ASSET_TYPE_NODES, "nodes"),
         (ASSET_TYPE_NODES_MATERIALS, "materials")
         ):
-        PreviewHelper.addCollection(asset_type, NodesParser(), mod)        
+        PreviewHelper.addCollection(asset_type, NodesParser(), mod)    
+
+    dirs = categories(ASSET_TYPE_BASE_IMAGES)
+    PreviewHelper.addCollection(
+        ASSET_TYPE_BASE_IMAGES, 
+        BaseImageParser(), 
+        (ASSET_TYPE_BASE_IMAGES, dirs[0] if dirs else "")
+    )    
 
     Properties.initialize()
 

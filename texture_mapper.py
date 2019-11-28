@@ -16,36 +16,57 @@
 
 import os, re
 
+diffuse_ext = "basecolor,base_color,diffuse,diff,albedo,color,col".split(",")
+spec_ext = "specular,spec,spc".split(",")
+rough_ext = "roughness,rough,rgh".split(",")
+gloss_ext = "gloss,gls".split(",")
+normal_ext = "normal,norm,nor,nrm".split(",")
+metal_ext = "metallic,metal,met".split(",")
+height_ext = "height,hgt".split(",")
+other_ext = "ao".split(",")
+valid_suffixes = "_1k|_2k|_4k|_8k"
+
+def build_reg(name):
+    return "(.*)%s(%s)?$" % (name, valid_suffixes)
+
+
+def matches_type(name, exts):
+    """
+    Check if name ends with any of the exts given.
+    """
+    name = name.lower()
+    for e in exts:
+        if re.match(build_reg(e), name):
+            return True
+    return False
+
+
+def find_base_images(path):
+    """
+    Find diffuse, albedo, basecolor .. images in directory.
+    """
+    images = []
+
+    for f in os.listdir(path):
+        fullName = os.path.join(path, f)
+        name = os.path.split(f)[1]
+        baseName = os.path.splitext(name)[0]
+
+        for e in diffuse_ext:
+            if re.match(build_reg(e), baseName.lower()):
+                images.append((fullName, baseName))
+                break
+
+    return images
+
+
 class TextureMapper:
     """
     Automatically map different types of textures based on the ending of the core file name.
     /path/to/file/xxxEXT.jpg/png
-    Below the known extensions, feel free to add more.
     """
-    diffuse_ext = "basecolor,base_color,diffuse,diff,albedo,color,col".split(",")
-    spec_ext = "specular,spec,spc".split(",")
-    rough_ext = "roughness,rough,rgh".split(",")
-    gloss_ext = "gloss,gls".split(",")
-    normal_ext = "normal,norm,nor,nrm".split(",")
-    metal_ext = "metallic,metal,met".split(",")
-    height_ext = "height,hgt".split(",")
-    valid_suffixes = "_1k|_2k|_4k|_8k"
 
-    def buildReg(self, name):
-        return "(.*)%s(%s)?$" % (name, self.valid_suffixes)
-
-    def endsWithAny(self, name, exts):
-        """
-        Check if name ends with any of the exts given.
-        """
-        name = name.lower()
-        for e in exts:
-            if re.match(self.buildReg(e), name):
-                return True
-        return False
-
-
-    def parseTextures(self, path, baseName):
+    def parse_textures(self, path, baseName):
         """
         Find textures that match the basename prefix and map based on the extension.
         """
@@ -56,19 +77,19 @@ class TextureMapper:
             name = os.path.split(f)[1]
             if name.startswith(baseName):
                 bName = os.path.splitext(name)[0]
-                if (self.endsWithAny(bName, self.diffuse_ext)):
+                if (matches_type(bName, diffuse_ext)):
                     self.diffuse = fullName
-                elif (self.endsWithAny(bName, self.spec_ext)):
+                elif (matches_type(bName, spec_ext)):
                     self.specular = fullName
-                elif (self.endsWithAny(bName, self.rough_ext)):
+                elif (matches_type(bName, rough_ext)):
                     self.roughness = fullName
-                elif (self.endsWithAny(bName, self.gloss_ext)):
+                elif (matches_type(bName, gloss_ext)):
                     self.gloss = fullName
-                elif (self.endsWithAny(bName, self.normal_ext)):
+                elif (matches_type(bName, normal_ext)):
                     self.normal = fullName
-                elif (self.endsWithAny(bName, self.metal_ext)):
+                elif (matches_type(bName, metal_ext)):
                     self.metal = fullName
-                elif (self.endsWithAny(bName, self.height_ext)):
+                elif (matches_type(bName, height_ext)):
                     self.height = fullName
 
         self.valid = self.diffuse != None
@@ -85,12 +106,12 @@ class TextureMapper:
         # Prepare search.
         path, name = os.path.split(image)
         baseName = os.path.splitext(name)[0]
-        allExt = self.diffuse_ext + self.spec_ext + self.rough_ext + self.gloss_ext + self.normal_ext + self.metal_ext + self.height_ext
+        allExt = diffuse_ext + spec_ext + rough_ext + gloss_ext + normal_ext + metal_ext + height_ext + other_ext
 
         # Check if selected texture matches at least any of the valid extensions.
         for ext in allExt:
-            match = re.match(self.buildReg(ext), baseName.lower())
+            match = re.match(build_reg(ext), baseName.lower())
             if match: 
-                self.parseTextures(path, baseName[0:len(match.group(1))])
+                self.parse_textures(path, baseName[0:len(match.group(1))])
                 break
                 

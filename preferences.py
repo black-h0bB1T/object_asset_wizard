@@ -29,11 +29,18 @@ class PreferencesPanel(AddonPreferences):
 
     root: StringProperty(
         name="Asset root directory",
-        default="C:/tmp/new_assets", # REMOVE->DEVELOPMENT
+        default="g:/assets", # REMOVE->DEVELOPMENT
         #default=os.path.splitdrive(__file__)[0],
         description="Path to Root Asset Directory",
         subtype="DIR_PATH"
         )
+
+    imgroot: StringProperty(
+        name="Texture root directory",
+        default="g:/texturing/textures",
+        description="Path to Root Texture Directory",
+        subtype="DIR_PATH"
+    )
 
     preview_engine: EnumProperty(name="Preview render engine", items=preview_engine_type)
 
@@ -48,6 +55,7 @@ class PreferencesPanel(AddonPreferences):
 
     def draw(self, context):
         self.layout.row().prop(self, "root", text="Root Asset Directory")
+        self.layout.row().prop(self, "imgroot", text="Root Texture Directory")
         self.layout.row().prop(self, "preview_engine")
         self.layout.row().prop(self, "preview_scale")
         self.layout.row().prop(self, "compact_panels")

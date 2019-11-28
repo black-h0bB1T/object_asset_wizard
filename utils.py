@@ -22,6 +22,7 @@ ASSET_TYPE_OBJECT = "objects"
 ASSET_TYPE_MATERIAL = "materials"
 ASSET_TYPE_NODES = "nodes"
 ASSET_TYPE_NODES_MATERIALS = "nodes_materials"
+ASSET_TYPE_BASE_IMAGES = "base_images"
 PREVIEW_EXT = ".png"
 FORMATS = (".blend", ".fbx")
 
@@ -32,15 +33,18 @@ class CategoriesCache:
     """
     cache = {
         ASSET_TYPE_OBJECT: [],
-        ASSET_TYPE_MATERIAL: []
+        ASSET_TYPE_MATERIAL: [],
+        ASSET_TYPE_BASE_IMAGES: []
     }
+
 
     @staticmethod
     def rec_scan_structure(asset_type, basedir=""):
         """
         Return categories (e.g. sub-dirs) from given asset_type (objects, materials, ...).
         """
-        path = os.path.join(PreferencesPanel.get().root, asset_type, basedir)
+        path = os.path.join(PreferencesPanel.get().imgroot, basedir) if \
+            asset_type == ASSET_TYPE_BASE_IMAGES else os.path.join(PreferencesPanel.get().root, asset_type, basedir)
         cats = []
         if os.path.exists(path):
             for e in sorted(os.listdir(path)):

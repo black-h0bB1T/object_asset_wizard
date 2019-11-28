@@ -246,7 +246,7 @@ class GeneratePBROperator(Operator, GenerateBase):
         # Automatically map texture names ...
         mapper = TextureMapper(self.filepath)
         if not mapper.valid:
-            self.report({"ERROR"}, "Can't find any valid diffuse texture, try to modify valid extensions (nw_texture_mapper.py) ...")
+            self.report({"ERROR"}, "Can't find any valid diffuse texture, try to modify valid extensions (texture_mapper.py) ...")
             return {'CANCELLED'} 
 
         # Create and fill the group.
@@ -268,6 +268,35 @@ class GeneratePBROperator(Operator, GenerateBase):
         context.window_manager.fileselect_add(self) 
 
         return {'RUNNING_MODAL'}    
+
+class QuickGeneratePBROperator(Operator, GenerateBase):
+    bl_idname = "asset_wizard.quick_generate_pbr_op"
+    bl_label = "Quick PBR"
+    bl_description = "Generate PBR node group from selected image." 
+    bl_options = {'REGISTER', 'UNDO'}
+
+
+    def execute(self, context):
+        """ 
+        Called after the user has choosen a texture file, the setup is created in here.
+        """
+        # Access the current tree.
+        tree = context.space_data.edit_tree
+
+        prop = Properties.get()
+
+        # Automatically map texture names ...
+        mapper = TextureMapper(prop.nw_bimgs_previews)
+        if not mapper.valid:
+            self.report({"ERROR"}, "Can't find any valid diffuse texture, try to modify valid extensions (texture_mapper.py) ...")
+            return {'CANCELLED'} 
+
+        # Create and fill the group.
+        group, input, output = self.create_group(tree, mapper.baseName, 12)
+        vector = self.create_texture_mapping(group, input, output, self.add_uv, tree)
+        self.create_pbr_setup(group, input, output, mapper, vector, self.add_hslbc, self.decal)
+
+        return {'FINISHED'}
 
 
 class GenerateImageOperator(Operator, GenerateBase):

@@ -20,7 +20,8 @@ from bpy.types import PropertyGroup, WindowManager
 
 from . utils                import (categories, list_to_enum, 
                                         ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
-                                        ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
+                                        ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS,
+                                        ASSET_TYPE_BASE_IMAGES)
 from . preview_helper       import PreviewHelper
 
 class Properties(PropertyGroup):
@@ -120,6 +121,16 @@ class Properties(PropertyGroup):
 
 
     # Node wizard property.
+    nw_bimgs_categories: EnumProperty(
+        name="",
+        description="Base images category",
+        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_BASE_IMAGES)),
+        update=lambda self, __: PreviewHelper.setData(ASSET_TYPE_BASE_IMAGES, (ASSET_TYPE_BASE_IMAGES, self.nw_bimgs_categories))
+    )
+    nw_bimgs_previews: EnumProperty(
+        items=lambda _, __: PreviewHelper.getCollection(ASSET_TYPE_BASE_IMAGES).items
+    )
+
     nw_add_hslbc: BoolProperty(name="Add HSL/BC", description="Add HSL and Brightness/Contrast inputs", default=True)
     nw_add_uv: BoolProperty(name="UV Input", description="Add external UV input instead of internally using primary UV mapping")
     nw_decal: BoolProperty(name="Clip Texture", description="Set textures to 'CLIP', so they can be used as decal")

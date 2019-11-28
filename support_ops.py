@@ -20,7 +20,7 @@ from bpy.types              import Operator
 
 from . properties           import Properties
 from . preview_helper       import PreviewHelper
-from . utils                import export_file, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL
+from . utils                import export_file, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL, ASSET_TYPE_BASE_IMAGES
 
 class RefreshObjectPreviews(Operator):
     bl_idname = "asset_wizard.refresh_object_previews_op"
@@ -62,6 +62,18 @@ class RefreshMaterialPreviews(Operator):
         )
         return {'FINISHED'}        
 
+class RefreshBaseImagePreviews(Operator):
+    bl_idname = "asset_wizard.refresh_base_image_previews_op"
+    bl_label = "Refresh"
+    bl_description = "Refresh previews for images"
+
+    def execute(self, context):
+        PreviewHelper.setData(
+            ASSET_TYPE_BASE_IMAGES, 
+            (ASSET_TYPE_BASE_IMAGES, Properties.get().nw_bimgs_categories),
+            True
+        )
+        return {'FINISHED'}        
 
 class ReRenderMaterialPreview(Operator):
     bl_idname = "asset_wizard.rerender_material_preview_op"
@@ -74,3 +86,4 @@ class ReRenderMaterialPreview(Operator):
             Properties.get().imat_previews
         )
         return {'FINISHED'}        
+
