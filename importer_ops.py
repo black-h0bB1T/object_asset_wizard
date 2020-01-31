@@ -57,6 +57,11 @@ class ImportBase:
             for l in links:
                 coll.objects.link(l)
 
+                # If object has been linked, make a proxy object
+                # and continue with this new one.
+                if link:
+                    l = l.make_local()
+
                 # Do this only, if not parented to another object!
                 if l.parent == None:
                     l.location += offset
@@ -124,7 +129,14 @@ class LinkObjectOperator(Operator, ImportBase):
     def execute(self, context):
         # Deselect all objects.
         [ o.select_set(False) for o in context.scene.objects ]
-        self.append_objects(Properties.get().iobj_previews, True)
+        
+        prop = Properties.get()
+        self.append_objects(
+            prop.iobj_previews, 
+            True,
+            prop.iobj_at_cursor,
+            prop.iobj_lock_xy
+        )
         return{'FINISHED'}
 
 

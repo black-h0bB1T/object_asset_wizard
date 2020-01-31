@@ -39,6 +39,9 @@ from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview,
 from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
                                         ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
 
+# 0.1.11
+#   Fix when linking objects instead of appending. They are now automatically converted
+#   to local/proxy. After this change 'At Cursor' works for linked objects too.
 # 0.1.10
 #   Fixing Blender API incompatibility in 2.80 final (curvature export failure).
 # 0.1.9
@@ -122,7 +125,7 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 
 bl_info = {
     "name" : "Asset Wizard",
-    "version": (0, 1, 10),
+    "version": (0, 1, 11),
     "author" : "h0bB1T",
     "description" : "Asset import and export utility.",
     "blender" : (2, 80, 0),
