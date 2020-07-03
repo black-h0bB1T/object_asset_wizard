@@ -32,7 +32,7 @@ def main(args):
             for i in bpy.data.images:
                 i.pack()
         
-        bpy.context.scene.update()
+        bpy.context.view_layer.update()
         bpy.context.preferences.filepaths.save_version = 0 # No backup blends needed
         bpy.ops.wm.save_as_mainfile(filepath=blend, compress=True)
 
