@@ -29,7 +29,7 @@ class PreferencesPanel(AddonPreferences):
 
     root: StringProperty(
         name="Asset root directory",
-        default="C:/tmp/new_assets", # REMOVE->DEVELOPMENT
+        default="C:/Dropbox/Blender/Assets", # REMOVE->DEVELOPMENT
         #default=os.path.splitdrive(__file__)[0],
         description="Path to Root Asset Directory",
         subtype="DIR_PATH"

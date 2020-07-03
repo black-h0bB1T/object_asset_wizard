@@ -84,6 +84,11 @@ class Properties(PropertyGroup):
         description="Reset XYZ rotation, single selection only", 
         default=True
         )
+    eobj_pack_textures: BoolProperty(
+        name="Pack Texture to .blend", 
+        description="Pack all textures from materials applied to the exported object into to .blend file", 
+        default=False
+        )        
     eobj_rename: EnumProperty(name="Rename", items=export_rename_type, default="2")
     eobj_rename_material: EnumProperty(name="Rename", items=export_rename_type, default="2")
     eobj_export_type: EnumProperty(name="Export", items=export_type)

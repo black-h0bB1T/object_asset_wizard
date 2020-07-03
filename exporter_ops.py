@@ -38,6 +38,7 @@ class UseObjectNameOperator(Operator):
 class ExportObjectBase:
     category: StringProperty()
     asset_name: StringProperty()
+    pack_textures: BoolProperty()
     location: StringProperty()
     rotation: BoolProperty()
     rename: StringProperty()
@@ -55,6 +56,7 @@ class OverwriteObjectExporterOperator(Operator, ExportObjectBase):
         bpy.ops.asset_wizard.object_exporter_op(
             category = self.category,
             asset_name = self.asset_name,
+            pack_textures = self.pack_textures,
             location = self.location,
             rotation = self.rotation,
             rename = self.rename,
@@ -213,7 +215,7 @@ class ObjectExporterOperator(Operator, ExportObjectBase):
 
         # The created file is just a library, instance the object using an external blender run.
         # https://blender.stackexchange.com/questions/129592/bpy-data-libraries-write-not-working
-        run_blend_fix(path, False)
+        run_blend_fix(path, self.pack_textures)
 
 
     def export_fbx(self, path):

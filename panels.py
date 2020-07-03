@@ -171,14 +171,19 @@ class ExportPanel(Panel):
 
 
     def draw(self, context):
-        compact = PreferencesPanel.get().compact_panels
+        prefs = PreferencesPanel.get()
         properties = Properties.get()
+
+        compact = prefs.compact_panels
+        if properties.eobj_pack_textures == None:
+            properties.eobj_pack_textures = prefs.pack_textures_by_default
 
         box = self.layout.box()
 
         # In case of empty asset-object-lib:
         if categories(ASSET_TYPE_OBJECT):
             if not compact:
+                box.row().prop(properties, "eobj_pack_textures", expand=True, toggle=True)
                 box.row().label(text="Target Rotation & Location:")
                 box.row().prop(properties, "eobj_rotation", expand=True, toggle=True)
                 box.row().prop(properties, "eobj_location", expand=True)
@@ -188,6 +193,7 @@ class ExportPanel(Panel):
                 box.row().prop(properties, "eobj_rename_material", expand=True)      
             else:
                 col = box.column(align=True)
+                col.row(align=True).prop(properties, "eobj_pack_textures", expand=True, toggle=True)
                 col.row(align=True).prop(properties, "eobj_rotation", expand=True, toggle=True)
                 col.row(align=True).prop(properties, "eobj_location", expand=True)
                 col.row(align=True).prop(properties, "eobj_rename", expand=True)
@@ -227,6 +233,7 @@ class ExportPanel(Panel):
                 op = col.row(align=True).operator(ObjectExporterOperator.bl_idname, icon="EXPORT")
             op.category = properties.eobj_categories
             op.asset_name = properties.eobj_asset_name
+            op.pack_textures = properties.eobj_pack_textures
             op.location = properties.eobj_location
             op.rotation = properties.eobj_rotation
             op.rename = properties.eobj_rename
