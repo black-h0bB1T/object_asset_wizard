@@ -78,3 +78,5 @@ class NodesParser:
                         thumb = lst.collection.load(group, noIcon, 'IMAGE')
                     lst.items.append(("%s::%s" % (blend, group), group, "", thumb.icon_id, id))
                     id += 1
+
+

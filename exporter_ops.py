@@ -19,9 +19,10 @@ import bpy, os
 from bpy.types              import Operator
 from bpy.props              import StringProperty, BoolProperty
 
-from . utils                import export_file, ASSET_TYPE_OBJECT
+from . utils                import textures_of_objects, blender_2_8x, export_file, ASSET_TYPE_OBJECT
 from . common_utils         import calc_bounding_box
 from . properties           import Properties
+from . preferences          import PreferencesPanel
 from . execute_blender      import run_blend_fix
 
 class UseObjectNameOperator(Operator):
@@ -64,11 +65,80 @@ class OverwriteObjectExporterOperator(Operator, ExportObjectBase):
             export_type = self.export_type
         )
 
+
         return {'FINISHED'}
+
+    def draw(self, context):
+        properties = Properties.get()
+
+        layout = self.layout
+        layout.row().template_list(
+            "TexturePackList",
+            "PackList",
+            properties,
+            "eobj_pack_textures_list",
+            properties,
+            "eobj_pack_textures_index"
+        )
 
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)    
+        if self.export_type == '0' and self.pack_textures and len(textures_of_objects(context.selected_objects)) > 0:
+            properties = Properties.get()
+
+            properties.eobj_pack_textures_list.clear()
+            for m in textures_of_objects(context.selected_objects):
+                properties.eobj_pack_textures_list.add().name = m
+
+            return context.window_manager.invoke_props_dialog(self, width=800)
+        else:
+            return context.window_manager.invoke_confirm(self, event)    
+
+
+class TexturePackSelectionOperator(Operator, ExportObjectBase):
+    bl_idname = "asset_wizard.texture_selection_op"
+    bl_label = "Select textures to pack"
+    bl_description = "Export selected objects"
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    
+    def invoke(self, context, event):
+        properties = Properties.get()
+
+        properties.eobj_pack_textures_list.clear()
+        for m in textures_of_objects(context.selected_objects):
+            properties.eobj_pack_textures_list.add().name = m
+
+        return context.window_manager.invoke_props_dialog(self, width=800)
+
+
+    def draw(self, context):
+        properties = Properties.get()
+
+        layout = self.layout
+        layout.row().template_list(
+            "TexturePackList",
+            "PackList",
+            properties,
+            "eobj_pack_textures_list",
+            properties,
+            "eobj_pack_textures_index"
+        )
+
+
+    def execute(self, context):
+        bpy.ops.asset_wizard.object_exporter_op(
+            category = self.category,
+            asset_name = self.asset_name,
+            pack_textures = self.pack_textures,
+            location = self.location,
+            rotation = self.rotation,
+            rename = self.rename,
+            rename_material = self.rename_material,
+            export_type = self.export_type
+        )
+
+        return {'FINISHED'}        
 
 
 class ObjectExporterOperator(Operator, ExportObjectBase):
@@ -205,17 +275,29 @@ class ObjectExporterOperator(Operator, ExportObjectBase):
 
 
     def export_blend(self, path, objects):
-        bpy.data.libraries.write(
-            path, 
-            set(objects), 
-            relative_remap=True, 
-            compress=True,
-            fake_user=True
-        )
+        if blender_2_8x():
+            bpy.data.libraries.write(
+                path, 
+                set(objects), 
+                relative_remap=True, 
+                compress=True,
+                fake_user=True
+            )
+        else:
+            bpy.data.libraries.write(
+                path, 
+                set(objects), 
+                path_remap=PreferencesPanel.get().export_remap, 
+                compress=True,
+                fake_user=True
+            )
+
+        properties = Properties.get()
+        textures_to_pack = [ os.path.split(t.name)[1] for t in properties.eobj_pack_textures_list if t.selected ]
 
         # The created file is just a library, instance the object using an external blender run.
         # https://blender.stackexchange.com/questions/129592/bpy-data-libraries-write-not-working
-        run_blend_fix(path, self.pack_textures)
+        run_blend_fix(path, textures_to_pack)
 
 
     def export_fbx(self, path):

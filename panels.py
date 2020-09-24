@@ -19,12 +19,12 @@ import bpy, os
 from bpy.types              import Panel, WindowManager
 from bpy.props              import EnumProperty, StringProperty
 
-from . utils                import categories, export_file, export_file_exists, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL
+from . utils                import textures_of_objects, categories, export_file, export_file_exists, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL
 from . preferences          import PreferencesPanel
 from . preview_helper       import PreviewHelper
 from . properties           import Properties
 from . create_category_ops  import CreateCategoryOperator
-from . exporter_ops         import UseObjectNameOperator, OverwriteObjectExporterOperator, ObjectExporterOperator
+from . exporter_ops         import UseObjectNameOperator, OverwriteObjectExporterOperator, TexturePackSelectionOperator, ObjectExporterOperator
 from . importer_ops         import (AppendObjectOperator, LinkObjectOperator, 
                                     SetMaterialOperator, AppendMaterialOperator, OpenObjectOperator, OpenMaterialOperator)
 from . render_previews_ops  import RenderPreviewsOperator,RenderAllPreviewsOperator        
@@ -109,7 +109,7 @@ class ImportPanel(Panel):
                     box.row().label(text="Materials")
 
                 col = box.column(align=True)
-                col.row(align=True).prop(properties, "imat_categories")
+                col.row(align=True).prop(properties, "imat_categories") 
 
                 if PreviewHelper.getCollection(ASSET_TYPE_MATERIAL).items:
                     col.row(align=True).template_icon_view(
@@ -193,12 +193,12 @@ class ExportPanel(Panel):
                 box.row().prop(properties, "eobj_rename_material", expand=True)      
             else:
                 col = box.column(align=True)
-                col.row(align=True).prop(properties, "eobj_pack_textures", expand=True, toggle=True)
                 col.row(align=True).prop(properties, "eobj_rotation", expand=True, toggle=True)
                 col.row(align=True).prop(properties, "eobj_location", expand=True)
                 col.row(align=True).prop(properties, "eobj_rename", expand=True)
                 col.row(align=True).prop(properties, "eobj_rename_material", expand=True)      
 
+                
             if not compact:
                 box = self.layout.box()
                 box.row().label(text="Output Category:")
@@ -217,6 +217,8 @@ class ExportPanel(Panel):
 
             col = box.column(align=True)
             col.row(align=True).prop(properties, "eobj_export_type", expand=True)
+            if properties.eobj_export_type == '0':
+                col.row(align=True).prop(properties, "eobj_pack_textures", expand=True, toggle=True)
             col.row(align=True).prop(properties, "eobj_categories")
             split = col.row(align=True).split(factor=0.9, align=True)
             split.prop(properties, "eobj_asset_name", expand=True)
@@ -230,7 +232,12 @@ class ExportPanel(Panel):
                 Properties.export_type_ext(properties.eobj_export_type)):
                 op = col.row(align=True).operator(OverwriteObjectExporterOperator.bl_idname, icon="EXPORT")
             else:
-                op = col.row(align=True).operator(ObjectExporterOperator.bl_idname, icon="EXPORT")
+                # Only if export to blend and pack textures is enabled .. and if at least one texture can be packed.
+                if properties.eobj_export_type == '0' and properties.eobj_pack_textures and len(textures_of_objects(context.selected_objects)) > 0:
+                    op = col.row(align=True).operator(TexturePackSelectionOperator.bl_idname, icon="EXPORT")
+                else:
+                    op = col.row(align=True).operator(ObjectExporterOperator.bl_idname, icon="EXPORT")
+
             op.category = properties.eobj_categories
             op.asset_name = properties.eobj_asset_name
             op.pack_textures = properties.eobj_pack_textures

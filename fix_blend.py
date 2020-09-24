@@ -15,22 +15,32 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 # blender --background --factory-startup --python fix_blend.py -- [Asset.blend] [Pack=True/False]
-import bpy, sys
+import bpy, sys, argparse
 
 def main(args):
     print("Script args: ", args)
-    packImages = False
+
     if len(args) > 0:
-        blend = args[0]
-        if len(args) > 1 and args[1] == "True":
-            packImages = True
+        parser = argparse.ArgumentParser()
+        parser.add_argument('blend')
+        parser.add_argument('--pack', action='append')
+        args = parser.parse_args(args)
+
+        blend = args.blend
+        packImages = args.pack
+
+        print(f"Blend to fix: {blend}")
+        print(f"Images to pack: {packImages}")
+
         bpy.ops.wm.open_mainfile(filepath=blend)
 
         for o in bpy.data.objects:
             bpy.context.scene.collection.objects.link(o)
-        if packImages:
+        for p in packImages:
             for i in bpy.data.images:
-                i.pack()
+                if i.filepath.endswith(p):
+                    i.pack()
+                    break
         
         bpy.context.view_layer.update()
         bpy.context.preferences.filepaths.save_version = 0 # No backup blends needed

@@ -16,8 +16,9 @@
 
 import bpy, os
 
-from bpy.types import AddonPreferences
-from bpy.props import StringProperty, EnumProperty, BoolProperty, FloatProperty
+from bpy.types              import AddonPreferences
+from bpy.props              import StringProperty, EnumProperty, BoolProperty, FloatProperty
+
 
 class PreferencesPanel(AddonPreferences):
     bl_idname = __package__
@@ -46,11 +47,29 @@ class PreferencesPanel(AddonPreferences):
         soft_max=5.0
         )
 
+    use_category_icons: BoolProperty(name="Use category icons", default=False)
+
+    export_remap: EnumProperty(
+        name="Remap export paths:",
+        items=[
+            ( 'NONE', "NONE", "No path manipulation (default)" ),
+            ( 'RELATIVE', "RELATIVE", "Remap paths that are already relative to the new location" ),
+            ( 'RELATIVE_ALL', "RELATIVE_ALL", "Remap all paths to be relative to the new location" ),
+            ( 'ABSOLUTE', "ABSOLUTE", "Make all paths absolute on writing" ),
+        ],
+        default='ABSOLUTE'
+    )
+
     def draw(self, context):
         self.layout.row().prop(self, "root", text="Root Asset Directory")
         self.layout.row().prop(self, "preview_engine")
         self.layout.row().prop(self, "preview_scale")
-        self.layout.row().prop(self, "compact_panels")
+        self.layout.row().prop(self, "compact_panels", toggle=True)
+        #self.layout.row().prop(self, "use_category_icons", toggle=True)
+        from . utils import blender_2_8x
+        if not blender_2_8x():
+            self.layout.row().prop(self, "export_remap", expand=True)
+
 
     @staticmethod
     def get():

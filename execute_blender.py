@@ -51,7 +51,7 @@ def execute_blender(args):
     print(" ".join(args))
     return execute(args)
 
-# blender --background --factory-startup --python fix_blend.py -- [Asset.blend] [Pack=True/False]
+# blender --background --factory-startup --python fix_blend.py -- [Asset.blend] --pack X.png --pack Y.png ..
 def run_blend_fix(asset, pack):
     """
     Fixes the given .blend file, by instancing all objects in the active scene.
@@ -63,8 +63,11 @@ def run_blend_fix(asset, pack):
         os.path.join(os.path.dirname(__file__), "fix_blend.py"),
         "--",
         asset,
-        "True" if pack else "False"
     ]
+
+    for p in pack:
+        args.append("--pack")
+        args.append(p)
     
     execute_blender(args).wait() # Wait for completion.
 

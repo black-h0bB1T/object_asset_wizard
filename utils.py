@@ -17,14 +17,17 @@
 import bpy, os
 
 from . preferences          import PreferencesPanel
+from . icon_helper          import IconHelper
+from typing                 import List
 
 ASSET_TYPE_OBJECT = "objects"
 ASSET_TYPE_MATERIAL = "materials"
+ASSET_TYPE_HDRI = "hdri"
 ASSET_TYPE_NODES = "nodes"
 ASSET_TYPE_NODES_MATERIALS = "nodes_materials"
+
 PREVIEW_EXT = ".png"
 FORMATS = (".blend", ".fbx")
-
 
 class CategoriesCache:
     """
@@ -41,12 +44,17 @@ class CategoriesCache:
         Return categories (e.g. sub-dirs) from given asset_type (objects, materials, ...).
         """
         path = os.path.join(PreferencesPanel.get().root, asset_type, basedir)
+        use_icons = PreferencesPanel.get().use_category_icons
         cats = []
         if os.path.exists(path):
             for e in sorted(os.listdir(path)):
                 p = os.path.join(path, e)
                 if os.path.isdir(p) and not e.startswith('.'):
-                    cats.append(os.path.join(basedir, e))
+                    if use_icons:
+                        icon = os.path.join(p, "icon.png")
+                        cats.append((os.path.join(basedir, e), icon if os.path.exists(icon) else None))
+                    else:
+                        cats.append((os.path.join(basedir, e), None))
                 if os.path.isdir(p):
                     cats += (CategoriesCache.rec_scan_structure(asset_type, os.path.join(basedir, e)))
         return cats
@@ -73,8 +81,12 @@ def list_to_enum(lst, include_root=False):
     Convert a list of strings to a EnumProperty list (s, s, '', #).
     """
     r = [ ("<ROOT>", "<ROOT>", '', 0) ] if include_root else []
-    for item in lst:
-        r.append((item, item, '', len(r)))
+    for item, icon in lst:
+        if icon:
+            icon_id = IconHelper.get_icon(icon)
+            r.append((item, item, '', icon_id, len(r)))
+        else:
+            r.append((item, item, '', len(r)))
     return r
 
 
@@ -144,3 +156,47 @@ def split_entry(entry_name):
         label = os.path.splitext(os.path.split(imp)[1])[0]
 
     return (imp, preview, label, mat)
+
+
+def blender_2_8x():
+    """
+    Check if blender 2.8x is used.
+    """
+    return bpy.app.version < (2, 90, 0)
+
+
+def textures_of_node_tree(nt: bpy.types.NodeTree):
+    """
+    Helper fpr textures_of_object(s).
+    """
+    r = []
+    for n in nt.nodes:
+        if n.bl_idname == 'ShaderNodeTexImage':
+            if n.image and n.image.filepath:
+                r.append(bpy.path.abspath(n.image.filepath))
+        elif n.bl_idname == 'ShaderNodeGroup' and n.node_tree:
+            r.extend(textures_of_node_tree(n.node_tree))
+    return r
+
+
+def textures_of_object(obj: bpy.types.Object):
+    """
+    Helper fpr textures_of_objects.
+    """
+    r = []
+    for ms in obj.material_slots:
+        if ms.material and ms.material.node_tree:
+            r.extend(textures_of_node_tree(ms.material.node_tree))
+    return r
+
+
+def textures_of_objects(objects: List[bpy.types.Object]):
+    """
+    Get all image textures used by all materials from all objects as set.
+    """
+    r = []
+    for o in objects:
+        r.extend(textures_of_object(o))
+    return set(r)
+
+   

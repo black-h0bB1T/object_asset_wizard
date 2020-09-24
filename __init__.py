@@ -17,12 +17,12 @@
 import bpy, platform, os, stat
 
 from . preferences          import PreferencesPanel
-from . properties           import Properties
+from . properties           import TexturesToExport, TexturePackList, Properties
 from . preview_parsers      import CollectionImageParser, NodesParser
 from . preview_helper       import PreviewHelper
 from . panels               import ImportPanel, ExportPanel, NodeWizardPanel, NodeWizardMapPanel, NodeWizardExportPanel
 from . create_category_ops  import CreateCategoryOperator
-from . exporter_ops         import UseObjectNameOperator, OverwriteObjectExporterOperator, ObjectExporterOperator
+from . exporter_ops         import UseObjectNameOperator, OverwriteObjectExporterOperator, TexturePackSelectionOperator,ObjectExporterOperator
 from . importer_ops         import (AppendObjectOperator, LinkObjectOperator, 
                                         SetMaterialOperator, AppendMaterialOperator, OpenObjectOperator, OpenMaterialOperator)
 from . render_previews_ops  import ModalTimerOperator, RenderPreviewsOperator, RenderAllPreviewsOperator   
@@ -38,6 +38,7 @@ from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTex
 from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview, RefreshMaterialPreviews, ReRenderMaterialPreview                                        
 from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
                                         ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
+from . icon_helper          import IconHelper
 
 # 0.1.11
 #   Fix when linking objects instead of appending. They are now automatically converted
@@ -125,7 +126,7 @@ from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MA
 
 bl_info = {
     "name" : "Asset Wizard",
-    "version": (0, 1, 11),
+    "version": (0, 1, 12),
     "author" : "h0bB1T",
     "description" : "Asset import and export utility.",
     "blender" : (2, 80, 0),
@@ -135,8 +136,10 @@ bl_info = {
 
 ops = [
     PreferencesPanel,
+    TexturesToExport,
     Properties,
     ImportPanel,
+    TexturePackList,
     ExportPanel,
     NodeWizardPanel,
     NodeWizardMapPanel,
@@ -144,6 +147,7 @@ ops = [
     CreateCategoryOperator,
     UseObjectNameOperator,
     OverwriteObjectExporterOperator,
+    TexturePackSelectionOperator,
     ObjectExporterOperator,
     AppendObjectOperator, 
     LinkObjectOperator, 
@@ -206,6 +210,8 @@ def register():
         ):
         PreviewHelper.addCollection(asset_type, NodesParser(), mod)        
 
+    IconHelper.init()
+
     Properties.initialize()
 
     # On Linux, guarantee curvature has execute rights.
@@ -220,6 +226,7 @@ def register():
 def unregister():
     Properties.cleanup()
 
+    IconHelper.dispose()
     PreviewHelper.removeAllCollections()
 
     for op in ops:

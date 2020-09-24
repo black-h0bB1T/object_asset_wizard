@@ -21,7 +21,8 @@ from bpy.props              import StringProperty, BoolProperty
 from . texture_mapper       import TextureMapper
 from . node_utils           import NodeUtils
 from . properties           import Properties
-from . utils                import export_file, ASSET_TYPE_MATERIAL
+from . utils                import blender_2_8x, export_file, ASSET_TYPE_MATERIAL
+from . preferences          import PreferencesPanel
 
 class GenerateBase(NodeUtils):
     """
@@ -353,13 +354,22 @@ class ExportPBROperator(Operator, GenerateBase):
 
         # Export to file.
         filename = export_file(ASSET_TYPE_MATERIAL, self.category, mapper.baseName, ".blend")
-        bpy.data.libraries.write(
-            filename, 
-            set([mat, ]), 
-            relative_remap=True, 
-            compress=True,
-            fake_user=True
-        )
+        if blender_2_8x():
+            bpy.data.libraries.write(
+                filename, 
+                set([mat, ]), 
+                relative_remap=True, 
+                compress=True,
+                fake_user=True
+            )
+        else:
+            bpy.data.libraries.write(
+                filename, 
+                set([mat, ]), 
+                path_remap=PreferencesPanel.get().export_remap, 
+                compress=True,
+                fake_user=True
+            )        
 
         self.report({'INFO'}, "Material written to: " + filename)
 
@@ -407,13 +417,22 @@ class ExportMaterialOperator(Operator):
 
         # Export to file.
         filename = export_file(ASSET_TYPE_MATERIAL, self.category, mat.name, ".blend")
-        bpy.data.libraries.write(
-            filename, 
-            set([mat, ]), 
-            relative_remap=True, 
-            compress=True,
-            fake_user=True
-        )
+        if blender_2_8x():
+            bpy.data.libraries.write(
+                filename, 
+                set([mat, ]), 
+                relative_remap=True, 
+                compress=True,
+                fake_user=True
+            )
+        else:
+            bpy.data.libraries.write(
+                filename, 
+                set([mat, ]), 
+                path_remap=PreferencesPanel.get().export_remap, 
+                compress=True,
+                fake_user=True
+            ) 
 
         self.report({'INFO'}, "Material written to: " + filename)       
 

@@ -15,13 +15,32 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 import bpy, os
-from bpy.props import EnumProperty, BoolProperty, IntProperty, PointerProperty, StringProperty, FloatProperty
+from bpy.props import EnumProperty, BoolProperty, IntProperty, PointerProperty, StringProperty, FloatProperty, CollectionProperty
 from bpy.types import PropertyGroup, WindowManager
 
 from . utils                import (categories, list_to_enum, 
                                         ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
                                         ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
 from . preview_helper       import PreviewHelper
+
+class TexturesToExport(PropertyGroup):
+    selected: BoolProperty()
+    name: StringProperty()
+
+
+class TexturePackList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        # We could write some code to decide which icon to use here... 
+        custom_icon = 'OBJECT_DATAMODE'
+        
+        # Make sure your code supports all 3 layout types 
+        if self.layout_type in {'DEFAULT', 'COMPACT'}: 
+            p, n = os.path.split(item.name)
+            layout.prop(item, "selected", text=f"{n}  --  {p}", toggle=True) 
+        elif self.layout_type in {'GRID'}: 
+            layout.alignment = 'CENTER' 
+            layout.label(text="", icon = custom_icon)    
+
 
 class Properties(PropertyGroup):
     export_location_type = (
@@ -99,6 +118,9 @@ class Properties(PropertyGroup):
         description="Create new subdirectory here"
         )
     eobj_new_category: StringProperty(name="", description="Put new category name in here")
+
+    eobj_pack_textures_list: CollectionProperty(type=TexturesToExport)
+    eobj_pack_textures_index: IntProperty(default=0)
 
 
     # Import properties.
