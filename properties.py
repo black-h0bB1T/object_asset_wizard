@@ -18,17 +18,18 @@ import bpy, os
 from bpy.props import EnumProperty, BoolProperty, IntProperty, PointerProperty, StringProperty, FloatProperty, CollectionProperty
 from bpy.types import PropertyGroup, WindowManager
 
-from . utils                import (categories, list_to_enum, 
+from . utils                import (categories, categories_enum, 
                                         ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
                                         ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
 from . preview_helper       import PreviewHelper
+from . preview_parsers      import CollectionImageParser
 
 class TexturesToExport(PropertyGroup):
     selected: BoolProperty()
     name: StringProperty()
 
 
-class TexturePackList(bpy.types.UIList):
+class UI_UL_TexturePackList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here... 
         custom_icon = 'OBJECT_DATAMODE'
@@ -89,7 +90,7 @@ class Properties(PropertyGroup):
     # Export object properties.
     eobj_categories: EnumProperty(
         name="", 
-        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_OBJECT)),
+        items=lambda _, __: categories_enum(ASSET_TYPE_OBJECT, empty_too=True),
         description="Export to this category"
         )
     eobj_asset_name: StringProperty(name="", default="Asset")
@@ -104,8 +105,8 @@ class Properties(PropertyGroup):
         default=True
         )
     eobj_pack_textures: BoolProperty(
-        name="Pack Texture to .blend", 
-        description="Pack all textures from materials applied to the exported object into to .blend file", 
+        name="Pack Textures to .blend", 
+        description="Pack selected textures from materials applied to the exported objects into to .blend file", 
         default=False
         )        
     eobj_rename: EnumProperty(name="Rename", items=export_rename_type, default="2")
@@ -114,7 +115,7 @@ class Properties(PropertyGroup):
 
     eobj_new_categories: EnumProperty(
         name="", 
-        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_OBJECT), True),
+        items=lambda _, __: categories_enum(ASSET_TYPE_OBJECT, include_root=True, empty_too=True),
         description="Create new subdirectory here"
         )
     eobj_new_category: StringProperty(name="", description="Put new category name in here")
@@ -127,22 +128,30 @@ class Properties(PropertyGroup):
     iobj_categories: EnumProperty(
         name="", 
         description="Object category",
-        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_OBJECT)),
-        update=lambda self, __: PreviewHelper.setData(ASSET_TYPE_OBJECT, (ASSET_TYPE_OBJECT, self.iobj_categories))
+        items=lambda _, __: categories_enum(ASSET_TYPE_OBJECT),
+        update=lambda self, __: self.reset_enum_selection(ASSET_TYPE_OBJECT)
     )
     iobj_previews: EnumProperty(
-        items=lambda _, __: PreviewHelper.getCollection(ASSET_TYPE_OBJECT).items
+        items=lambda self, __: PreviewHelper.getDynamicCollection(
+            ASSET_TYPE_OBJECT, 
+            CollectionImageParser(),
+            (ASSET_TYPE_OBJECT, self.iobj_categories)
+        ).items
     )
     iobj_at_cursor: BoolProperty(name="At Cursor", description="Move imported objects to cursor position", default=False)
     iobj_lock_xy: BoolProperty(name="Lock XY", description="Lock in XY plane (move & rotation)")
     imat_categories: EnumProperty(
         name="", 
         description="Material category",
-        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_MATERIAL)),
-        update=lambda self, __: PreviewHelper.setData(ASSET_TYPE_MATERIAL, (ASSET_TYPE_MATERIAL, self.imat_categories))
+        items=lambda _, __: categories_enum(ASSET_TYPE_MATERIAL),
+        update=lambda self, __: self.reset_enum_selection(ASSET_TYPE_MATERIAL)
     )
     imat_previews: EnumProperty(
-        items=lambda _, __: PreviewHelper.getCollection(ASSET_TYPE_MATERIAL).items
+        items=lambda self, __: PreviewHelper.getDynamicCollection(
+            ASSET_TYPE_MATERIAL, 
+            CollectionImageParser(),
+            (ASSET_TYPE_MATERIAL, self.imat_categories)
+        ).items
     )
 
 
@@ -160,13 +169,13 @@ class Properties(PropertyGroup):
     
     nw_categories: EnumProperty(
         name="", 
-        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_MATERIAL)),
+        items=lambda _, __: categories_enum(ASSET_TYPE_MATERIAL, empty_too=True),
         description="Export to this category"
     )
     nw_new_category: StringProperty(name="", description="Put new category name in here")
     nw_new_categories: EnumProperty(
         name="", 
-        items=lambda _, __: list_to_enum(categories(ASSET_TYPE_MATERIAL), True),
+        items=lambda _, __: categories_enum(ASSET_TYPE_MATERIAL, include_root=True, empty_too=True),
         description="Create new subdirectory here"
         )
 
@@ -190,11 +199,11 @@ class Properties(PropertyGroup):
     cao_ao_local: BoolProperty(name="Local only", default=True)
     cao_ao_margin: IntProperty(name="Bake margin", default=16)
 
-    cao_curv_size: EnumProperty(name="Curv Size", items=texture_size_type, default="2048")
+    cao_curv_size: EnumProperty(name="Curve Size", items=texture_size_type, default="2048")
     cao_analyze_mode: EnumProperty(name="Analyze Mode", items=cao_analyze_mode_type, default="Vertex")
     cao_curv_min_angle: IntProperty(name="Min Angle", min=0, max=90, default=10)
     cao_curv_line_thickness: IntProperty(name="Line Thickness", min=1, max=128, default=16)
-    cao_curv_apply_modifiers: BoolProperty(name="Apply Modfiers", default=False)
+    cao_curv_apply_modifiers: BoolProperty(name="Apply Modifiers", default=False)
 
     def active_uv_maps(self, context):
         """
@@ -208,6 +217,21 @@ class Properties(PropertyGroup):
         if not layers:
             layers.append(("__DUMMY__", "", ""))
         return layers
+
+
+    def reset_enum_selection(self, asset_type: str):
+        if asset_type == ASSET_TYPE_OBJECT:
+            self.iobj_previews = PreviewHelper.getDynamicCollection(
+                ASSET_TYPE_OBJECT, 
+                CollectionImageParser(),
+                (ASSET_TYPE_OBJECT, self.iobj_categories)
+            ).items[0][0]
+        elif asset_type == ASSET_TYPE_MATERIAL:
+            self.imat_previews = PreviewHelper.getDynamicCollection(
+                ASSET_TYPE_MATERIAL, 
+                CollectionImageParser(),
+                (ASSET_TYPE_MATERIAL, self.imat_categories)
+            ).items[0][0]
 
 
     @staticmethod

@@ -19,7 +19,7 @@ import bpy, os
 from bpy.types              import Panel, WindowManager
 from bpy.props              import EnumProperty, StringProperty
 
-from . utils                import textures_of_objects, categories, export_file, export_file_exists, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL
+from . utils                import textures_of_objects, categories, categories_enum, export_file, export_file_exists, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL
 from . preferences          import PreferencesPanel
 from . preview_helper       import PreviewHelper
 from . properties           import Properties
@@ -63,8 +63,8 @@ class ImportPanel(Panel):
 
         box = self.layout.box()
 
-        objcats = categories(ASSET_TYPE_OBJECT)
-        matcats = categories(ASSET_TYPE_MATERIAL)
+        objcats = categories_enum(ASSET_TYPE_OBJECT)
+        matcats = categories_enum(ASSET_TYPE_MATERIAL)
 
         if objcats or matcats:
             # In case of empty asset-object-lib:
@@ -73,30 +73,26 @@ class ImportPanel(Panel):
                     box.row().label(text="Objects")
 
                 col = box.column(align=True)
-                col.row(align=True).prop(properties, "iobj_categories")
+                col.prop(properties, "iobj_categories")
+                col.template_icon_view(
+                    properties, 
+                    "iobj_previews", 
+                    show_labels=True,
+                    scale=preview_scale
+                )
+                split = col.row(align=True).split(factor=0.5, align=True)
+                split.operator(RefreshObjectPreviews.bl_idname, icon="FILE_REFRESH")
+                split.operator(ReRenderObjectPreview.bl_idname, icon="RENDER_STILL")
+                split = col.row(align=True).split(factor=0.333, align=True)
+                split.operator(AppendObjectOperator.bl_idname, icon="ADD")
 
-                if PreviewHelper.getCollection(ASSET_TYPE_OBJECT).items:
-                    is_fbx = properties.iobj_previews.lower().endswith(".fbx")
-                    col.row(align=True).template_icon_view(
-                        properties, 
-                        "iobj_previews", 
-                        show_labels=True,
-                        scale=preview_scale
-                    )
-                    split = col.row(align=True).split(factor=0.5, align=True)
-                    split.operator(RefreshObjectPreviews.bl_idname, icon="FILE_REFRESH")
-                    split.operator(ReRenderObjectPreview.bl_idname, icon="RENDER_STILL")
-                    split = col.row(align=True).split(factor=0.333, align=True)
-                    split.operator(AppendObjectOperator.bl_idname, icon="ADD")
-                    if not is_fbx:
-                        split.operator(LinkObjectOperator.bl_idname, icon="LINK_BLEND")
-                        split.operator(OpenObjectOperator.bl_idname, icon="FILE")
-                    split = col.row(align=True).split(factor=0.5, align=True)
-                    split.prop(properties, "iobj_at_cursor", toggle=True, icon="PIVOT_CURSOR")
-                    split.prop(properties, "iobj_lock_xy", toggle=True, icon="VIEW_PERSPECTIVE")
-                else:
-                    col.label(text="No object in this category yet")
-                    col.row().operator(RefreshObjectPreviews.bl_idname, icon="FILE_REFRESH")
+                is_fbx = properties.iobj_previews.lower().endswith(".fbx")
+                if not is_fbx:
+                    split.operator(LinkObjectOperator.bl_idname, icon="LINK_BLEND")
+                    split.operator(OpenObjectOperator.bl_idname, icon="FILE")
+                split = col.row(align=True).split(factor=0.5, align=True)
+                split.prop(properties, "iobj_at_cursor", toggle=True, icon="PIVOT_CURSOR")
+                split.prop(properties, "iobj_lock_xy", toggle=True, icon="VIEW_PERSPECTIVE")
 
             else:
                 box.label(text="No object categories yet")
@@ -109,25 +105,20 @@ class ImportPanel(Panel):
                     box.row().label(text="Materials")
 
                 col = box.column(align=True)
-                col.row(align=True).prop(properties, "imat_categories") 
-
-                if PreviewHelper.getCollection(ASSET_TYPE_MATERIAL).items:
-                    col.row(align=True).template_icon_view(
-                        properties, 
-                        "imat_previews", 
-                        show_labels=True,
-                        scale=preview_scale
-                        )
-                    split = col.row(align=True).split(factor=0.5, align=True)
-                    split.operator(RefreshMaterialPreviews.bl_idname, icon="FILE_REFRESH")
-                    split.operator(ReRenderMaterialPreview.bl_idname, icon="RENDER_STILL")
-                    split = col.row(align=True).split(factor=0.333, align=True)
-                    split.operator(SetMaterialOperator.bl_idname, icon="LINK_BLEND")
-                    split.operator(AppendMaterialOperator.bl_idname, icon="ADD")
-                    split.operator(OpenMaterialOperator.bl_idname, icon="FILE")
-                else:
-                    col.label(text="No material in this category yet")
-                    col.operator(RefreshMaterialPreviews.bl_idname, icon="FILE_REFRESH")
+                col.prop(properties, "imat_categories") 
+                col.template_icon_view(
+                    properties, 
+                    "imat_previews", 
+                    show_labels=True,
+                    scale=preview_scale
+                    )
+                split = col.row(align=True).split(factor=0.5, align=True)
+                split.operator(RefreshMaterialPreviews.bl_idname, icon="FILE_REFRESH")
+                split.operator(ReRenderMaterialPreview.bl_idname, icon="RENDER_STILL")
+                split = col.row(align=True).split(factor=0.333, align=True)
+                split.operator(SetMaterialOperator.bl_idname, icon="LINK_BLEND")
+                split.operator(AppendMaterialOperator.bl_idname, icon="ADD")
+                split.operator(OpenMaterialOperator.bl_idname, icon="FILE")
 
             else:
                 box.label(text="No material categories yet")
@@ -183,7 +174,6 @@ class ExportPanel(Panel):
         # In case of empty asset-object-lib:
         if categories(ASSET_TYPE_OBJECT):
             if not compact:
-                box.row().prop(properties, "eobj_pack_textures", expand=True, toggle=True)
                 box.row().label(text="Target Rotation & Location:")
                 box.row().prop(properties, "eobj_rotation", expand=True, toggle=True)
                 box.row().prop(properties, "eobj_location", expand=True)
@@ -218,7 +208,7 @@ class ExportPanel(Panel):
             col = box.column(align=True)
             col.row(align=True).prop(properties, "eobj_export_type", expand=True)
             if properties.eobj_export_type == '0':
-                col.row(align=True).prop(properties, "eobj_pack_textures", expand=True, toggle=True)
+                col.row(align=True).prop(properties, "eobj_pack_textures", expand=True, toggle=True, icon='PACKAGE')
             col.row(align=True).prop(properties, "eobj_categories")
             split = col.row(align=True).split(factor=0.9, align=True)
             split.prop(properties, "eobj_asset_name", expand=True)

@@ -36,11 +36,12 @@ def main(args):
 
         for o in bpy.data.objects:
             bpy.context.scene.collection.objects.link(o)
-        for p in packImages:
-            for i in bpy.data.images:
-                if i.filepath.endswith(p):
-                    i.pack()
-                    break
+        if packImages:
+            for p in packImages:
+                for i in bpy.data.images:
+                    if i.filepath.endswith(p):
+                        i.pack()
+                        break
         
         bpy.context.view_layer.update()
         bpy.context.preferences.filepaths.save_version = 0 # No backup blends needed

@@ -43,11 +43,11 @@ class CreateCategoryOperator(Operator):
             CategoriesCache.update_cache(self.asset_type)
             newcat = os.path.join(tcat, self.category)
             if self.asset_type == ASSET_TYPE_OBJECT:
-                Properties.get().iobj_categories = newcat
+                # is empty, so not available! Properties.get().iobj_categories = newcat
                 Properties.get().eobj_categories = newcat
                 Properties.get().eobj_new_categories = newcat
             if self.asset_type == ASSET_TYPE_MATERIAL:
-                Properties.get().imat_categories = newcat
+                # is empty, so not available! Properties.get().imat_categories = newcat
                 Properties.get().nw_categories = newcat
                 Properties.get().nw_new_categories = newcat
 

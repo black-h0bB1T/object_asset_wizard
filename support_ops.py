@@ -20,7 +20,7 @@ from bpy.types              import Operator
 
 from . properties           import Properties
 from . preview_helper       import PreviewHelper
-from . utils                import export_file, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL
+from . utils                import export_file, CategoriesCache, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL
 
 class RefreshObjectPreviews(Operator):
     bl_idname = "asset_wizard.refresh_object_previews_op"
@@ -33,6 +33,7 @@ class RefreshObjectPreviews(Operator):
             (ASSET_TYPE_OBJECT, Properties.get().iobj_categories),
             True
         )
+        CategoriesCache.update_cache(ASSET_TYPE_OBJECT)
         return {'FINISHED'}
 
 
@@ -60,6 +61,7 @@ class RefreshMaterialPreviews(Operator):
             (ASSET_TYPE_MATERIAL, Properties.get().imat_categories),
             True
         )
+        CategoriesCache.update_cache(ASSET_TYPE_MATERIAL)
         return {'FINISHED'}        
 
 

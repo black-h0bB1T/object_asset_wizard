@@ -18,7 +18,7 @@ import bpy, bpy.utils.previews, os
 
 class CollectionList:
     """
-    Stores all informations about a single collection. The parser is used
+    Stores all information about a single collection. The parser is used
     to parse a new list based on the data. The structure of "data" is parser specific.
     """
     def __init__(self, parser, data):
@@ -72,6 +72,22 @@ class PreviewHelper:
         lst = PreviewHelper.collections[name]
         if lst.mustScan:
             PreviewHelper.scanCollection(lst)
+        return lst
+
+
+    @staticmethod
+    def getDynamicCollection(name, parser, data):
+        if name not in PreviewHelper.collections:
+            PreviewHelper.collections[name] = CollectionList(parser, data)
+
+        lst = PreviewHelper.collections[name]
+        if lst.data != data:
+            lst.data = data
+            lst.mustScan = True
+
+        if lst.mustScan:
+            PreviewHelper.scanCollection(lst)
+            
         return lst
 
 

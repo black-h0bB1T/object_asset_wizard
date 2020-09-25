@@ -18,7 +18,7 @@ import bpy, os
 
 from . preferences          import PreferencesPanel
 from . icon_helper          import IconHelper
-from typing                 import List
+from typing                 import List, Tuple
 
 ASSET_TYPE_OBJECT = "objects"
 ASSET_TYPE_MATERIAL = "materials"
@@ -27,37 +27,111 @@ ASSET_TYPE_NODES = "nodes"
 ASSET_TYPE_NODES_MATERIALS = "nodes_materials"
 
 PREVIEW_EXT = ".png"
-FORMATS = (".blend", ".fbx")
+
+class AssetFolder:
+    def __init__(self, path: str, name: str, depth: int, icon: str = None):
+        self.path = path
+        self.name = name
+        self.depth = depth
+        self.asset_number = 0
+        self.folders = []
+
+
+    def add_folder(self, folder):
+        self.folders.append(folder)
+
+
+    def inc_asset_number(self):
+        self.asset_number += 1
+
+
+    def build_name(self) -> str:
+        if self.depth > 1:
+            return f"{(self.depth - 1) * '.'}/{self.name} ({self.asset_number})"
+        else:
+            return f"{self.name} ({self.asset_number})"
+
+
+    def get_entries(self, include_root: bool, empty_too: bool) -> List[Tuple[str, str, str]]:
+        r = []
+        if self.depth == 0:
+            if include_root:
+                r.append((self.path, "<ROOT>", self.path))
+        else:                
+            if empty_too or self.asset_number > 0:
+                r.append((self.path, self.build_name(), self.path))
+
+        for af in self.folders:
+            r.extend(af.get_entries(include_root, empty_too))
+
+        return r
+
+
+    def get_name_list(self) -> List[str]:
+        r = [ self.build_name(), ]
+        for af in self.folders:
+            r.extend(af.get_name_list())
+        return r
+
+
+def formats_to_parse(asset_type: str) -> List[str]:
+    """
+    Return list of extensions to show in previews (.blend, .fbx)
+    """
+    extensions = []
+    if asset_type == ASSET_TYPE_OBJECT:
+        preferences = PreferencesPanel.get()
+        extensions.clear()
+        if preferences.show_blend: extensions.append('.blend')
+        if preferences.show_fbx: extensions.append('.fbx')
+    elif asset_type == ASSET_TYPE_MATERIAL:
+        extensions.append(".blend")
+
+    return tuple(extensions)
+
 
 class CategoriesCache:
     """
     Caches the different directory structures, so they must not be parsed that often.
     """
     cache = {
-        ASSET_TYPE_OBJECT: [],
-        ASSET_TYPE_MATERIAL: []
+        ASSET_TYPE_OBJECT: None,
+        ASSET_TYPE_MATERIAL: None
     }
 
     @staticmethod
-    def rec_scan_structure(asset_type, basedir=""):
+    def rec_scan_structure(asset_type, basedir="", depth=0) -> AssetFolder:
         """
         Return categories (e.g. sub-dirs) from given asset_type (objects, materials, ...).
         """
-        path = os.path.join(PreferencesPanel.get().root, asset_type, basedir)
         use_icons = PreferencesPanel.get().use_category_icons
-        cats = []
+        extensions = formats_to_parse(asset_type)
+
+        path = os.path.join(PreferencesPanel.get().root, asset_type, basedir)
         if os.path.exists(path):
+            icon = os.path.join(part, "icon.png") if use_icons else None
+
+            asset_folder = AssetFolder(
+                "<ROOT>" if depth == 0 else basedir, 
+                "<ROOT>" if depth == 0 else os.path.split(path)[1], 
+                depth,
+                icon if icon and os.path.exists(icon) else None
+            )
+
             for e in sorted(os.listdir(path)):
-                p = os.path.join(path, e)
-                if os.path.isdir(p) and not e.startswith('.'):
-                    if use_icons:
-                        icon = os.path.join(p, "icon.png")
-                        cats.append((os.path.join(basedir, e), icon if os.path.exists(icon) else None))
-                    else:
-                        cats.append((os.path.join(basedir, e), None))
-                if os.path.isdir(p):
-                    cats += (CategoriesCache.rec_scan_structure(asset_type, os.path.join(basedir, e)))
-        return cats
+                abs_path = os.path.join(path, e)
+
+                if os.path.isdir(abs_path) and not e.startswith('.'):
+                    rel_path = os.path.join(basedir, e)
+                    # Do this recursively
+                    asset_folder.add_folder(CategoriesCache.rec_scan_structure(asset_type, rel_path, depth + 1))
+
+                elif os.path.isfile(abs_path) and e.endswith(extensions):
+                    asset_folder.inc_asset_number()
+
+            return asset_folder
+
+        return AssetFolder(path, "<ROOT>", 0)
 
 
     @staticmethod 
@@ -66,28 +140,26 @@ class CategoriesCache:
 
 
     @staticmethod
-    def categories(asset_type):
+    def categories(asset_type: str):
         if not CategoriesCache.cache[asset_type]:
             CategoriesCache.update_cache(asset_type)
-        return CategoriesCache.cache[asset_type]
+        return CategoriesCache.cache[asset_type].get_name_list()
+
+
+    @staticmethod
+    def categories_enum(asset_type: str, include_root: bool, empty_too: bool):
+        if not CategoriesCache.cache[asset_type]:
+            CategoriesCache.update_cache(asset_type)
+        return CategoriesCache.cache[asset_type].get_entries(include_root, empty_too)
+
 
 
 def categories(asset_type):
     return CategoriesCache.categories(asset_type)
 
 
-def list_to_enum(lst, include_root=False):
-    """
-    Convert a list of strings to a EnumProperty list (s, s, '', #).
-    """
-    r = [ ("<ROOT>", "<ROOT>", '', 0) ] if include_root else []
-    for item, icon in lst:
-        if icon:
-            icon_id = IconHelper.get_icon(icon)
-            r.append((item, item, '', icon_id, len(r)))
-        else:
-            r.append((item, item, '', len(r)))
-    return r
+def categories_enum(asset_type, include_root = False, empty_too = False):
+    return CategoriesCache.categories_enum(asset_type, include_root, empty_too)    
 
 
 def export_file(asset_type, category, name, ext):
@@ -115,15 +187,18 @@ def parse_entry_list(asset_type, category):
     In case of materials, parse .blend if it contains more
     than one material and create multiple entries (path/abc.blend::Material).
     """
+
     path = os.path.join(
         PreferencesPanel.get().root, 
         asset_type, 
         category
-    )
+    ) 
+
+    extensions = formats_to_parse(asset_type)
 
     entries = []
     for f in os.listdir(path):
-        if f.lower().endswith(FORMATS):
+        if f.lower().endswith(extensions):
             fullname = os.path.join(path, f)
             if asset_type == ASSET_TYPE_MATERIAL:
                 # Check if there are more than one material in this file.

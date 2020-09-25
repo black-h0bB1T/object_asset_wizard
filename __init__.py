@@ -17,7 +17,7 @@
 import bpy, platform, os, stat
 
 from . preferences          import PreferencesPanel
-from . properties           import TexturesToExport, TexturePackList, Properties
+from . properties           import TexturesToExport, UI_UL_TexturePackList, Properties
 from . preview_parsers      import CollectionImageParser, NodesParser
 from . preview_helper       import PreviewHelper
 from . panels               import ImportPanel, ExportPanel, NodeWizardPanel, NodeWizardMapPanel, NodeWizardExportPanel
@@ -36,10 +36,16 @@ from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTex
                                         ImportScalarMix, ImportIntensityVisualizer, ImportScalarMapper,
                                         ImportNormalDirection, ImportSlice)             
 from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview, RefreshMaterialPreviews, ReRenderMaterialPreview                                        
-from . utils                import (categories, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
+from . utils                import (categories, categories_enum, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
                                         ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
 from . icon_helper          import IconHelper
 
+# 0.1.12
+#   - Blender 2.9 compatibility (texture path remap option in preferences)
+#   - Option to show .blend + .fbx added to preferences
+#   - Shorter category subfolders
+#   - Empty categories hidden
+#   - A subset of the used textures can now be packed to the exported .blend
 # 0.1.11
 #   Fix when linking objects instead of appending. They are now automatically converted
 #   to local/proxy. After this change 'At Cursor' works for linked objects too.
@@ -139,7 +145,7 @@ ops = [
     TexturesToExport,
     Properties,
     ImportPanel,
-    TexturePackList,
+    UI_UL_TexturePackList,
     ExportPanel,
     NodeWizardPanel,
     NodeWizardMapPanel,
@@ -193,15 +199,6 @@ ops = [
 def register():
     for op in ops:
         bpy.utils.register_class(op)
-
-    # Prepare previews for importer
-    for asset_type in (ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL):
-        dirs = categories(asset_type)
-        PreviewHelper.addCollection(
-            asset_type,
-            CollectionImageParser(), 
-            (asset_type, dirs[0] if dirs else "")
-        )
 
     # Prepare previews for node wizard
     for (asset_type, mod) in (

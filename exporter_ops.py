@@ -72,13 +72,16 @@ class OverwriteObjectExporterOperator(Operator, ExportObjectBase):
         properties = Properties.get()
 
         layout = self.layout
+        rows = min(20, len(properties.eobj_pack_textures_list))
         layout.row().template_list(
-            "TexturePackList",
+            "UI_UL_TexturePackList",
             "PackList",
             properties,
             "eobj_pack_textures_list",
             properties,
-            "eobj_pack_textures_index"
+            "eobj_pack_textures_index",
+            rows=rows,
+            maxrows=rows
         )
 
 
@@ -116,13 +119,16 @@ class TexturePackSelectionOperator(Operator, ExportObjectBase):
         properties = Properties.get()
 
         layout = self.layout
+        rows = min(20, len(properties.eobj_pack_textures_list))
         layout.row().template_list(
-            "TexturePackList",
+            "UI_UL_TexturePackList",
             "PackList",
             properties,
             "eobj_pack_textures_list",
             properties,
-            "eobj_pack_textures_index"
+            "eobj_pack_textures_index",
+            rows=rows,
+            maxrows=rows
         )
 
 

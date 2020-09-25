@@ -17,7 +17,7 @@
 import bpy, os
 
 from . preferences          import PreferencesPanel
-from . utils                import parse_entry_list, split_entry
+from . utils                import parse_entry_list, split_entry, ASSET_TYPE_OBJECT
 
 class CollectionImageParser:
     """

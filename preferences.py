@@ -38,6 +38,9 @@ class PreferencesPanel(AddonPreferences):
 
     preview_engine: EnumProperty(name="Preview render engine", items=preview_engine_type)
 
+    show_blend: BoolProperty(name="Show .blend", default=True)
+    show_fbx: BoolProperty(name="Show .fbx", default=True)
+
     compact_panels: BoolProperty(name="Use compact panels", default=True)
 
     preview_scale: FloatProperty(
@@ -61,11 +64,17 @@ class PreferencesPanel(AddonPreferences):
     )
 
     def draw(self, context):
-        self.layout.row().prop(self, "root", text="Root Asset Directory")
-        self.layout.row().prop(self, "preview_engine")
-        self.layout.row().prop(self, "preview_scale")
-        self.layout.row().prop(self, "compact_panels", toggle=True)
+        layout = self.layout
+        layout.prop(self, "root", text="Root Asset Directory")
+        c = layout.column(align=True)
+        r = c.row(align=True)
+        r.prop(self, "show_blend", toggle=True)
+        r.prop(self, "show_fbx", toggle=True)
+        c.prop(self, "compact_panels", toggle=True)
         #self.layout.row().prop(self, "use_category_icons", toggle=True)
+        c.prop(self, "preview_scale")
+
+        layout.prop(self, "preview_engine")
         from . utils import blender_2_8x
         if not blender_2_8x():
             self.layout.row().prop(self, "export_remap", expand=True)

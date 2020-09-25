@@ -22,7 +22,7 @@ from bpy.props              import BoolProperty
 from . preferences          import PreferencesPanel
 from . execute_blender      import run_preview_render
 from . preview_parsers      import CollectionImageParser
-from . utils                import (categories, parse_entry_list, split_entry, 
+from . utils                import (CategoriesCache, categories, parse_entry_list, split_entry, 
                                         ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL)
 from . properties           import Properties
 
@@ -85,9 +85,11 @@ class RenderPreviews:
 
                 # Refresh view (if preview currently selected).
                 if self.jobs[0][0] == ASSET_TYPE_OBJECT:
+                    CategoriesCache.update_cache(ASSET_TYPE_OBJECT)
                     if self.jobs[0][1] == Properties.get().iobj_previews:
                         bpy.ops.asset_wizard.refresh_object_previews_op()
                 elif self.jobs[0][0] == ASSET_TYPE_MATERIAL:
+                    CategoriesCache.update_cache(ASSET_TYPE_MATERIAL)
                     if self.jobs[0][1] == Properties.get().imat_previews:
                         bpy.ops.asset_wizard.refresh_material_previews_op()
                 
