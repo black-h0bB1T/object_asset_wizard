@@ -37,7 +37,7 @@ from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTex
                                         ImportExtMusgrave, ImportExtVoronoi, ImportMixNoise,
                                         ImportScalarMix, ImportIntensityVisualizer, ImportScalarMapper,
                                         ImportNormalDirection, ImportSlice)      
-from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview, RefreshMaterialPreviews, ReRenderMaterialPreview
+from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview, RefreshMaterialPreviews, ReRenderMaterialPreview, RemoveAsset
 
 class ImportPanel(Panel):
     """
@@ -83,13 +83,20 @@ class ImportPanel(Panel):
                 split = col.row(align=True).split(factor=0.5, align=True)
                 split.operator(RefreshObjectPreviews.bl_idname, icon="FILE_REFRESH")
                 split.operator(ReRenderObjectPreview.bl_idname, icon="RENDER_STILL")
-                split = col.row(align=True).split(factor=0.333, align=True)
-                split.operator(AppendObjectOperator.bl_idname, icon="ADD")
 
+                split_outer = col.row(align=True).split(factor=0.9, align=True)
                 is_fbx = properties.iobj_previews.lower().endswith(".fbx")
-                if not is_fbx:
+                if is_fbx:
+                    split_outer.operator(AppendObjectOperator.bl_idname, icon="ADD")
+                else:
+                    split = split_outer.split(factor=0.333, align=True)
+                    split.operator(AppendObjectOperator.bl_idname, icon="ADD")
                     split.operator(LinkObjectOperator.bl_idname, icon="LINK_BLEND")
                     split.operator(OpenObjectOperator.bl_idname, icon="FILE")
+                op = split_outer.operator(RemoveAsset.bl_idname, icon="PANEL_CLOSE", text="")
+                op.asset_type = ASSET_TYPE_OBJECT
+                op.asset = properties.iobj_previews
+
                 split = col.row(align=True).split(factor=0.5, align=True)
                 split.prop(properties, "iobj_at_cursor", toggle=True, icon="PIVOT_CURSOR")
                 split.prop(properties, "iobj_lock_xy", toggle=True, icon="VIEW_PERSPECTIVE")
@@ -119,6 +126,9 @@ class ImportPanel(Panel):
                 split.operator(SetMaterialOperator.bl_idname, icon="LINK_BLEND")
                 split.operator(AppendMaterialOperator.bl_idname, icon="ADD")
                 split.operator(OpenMaterialOperator.bl_idname, icon="FILE")
+                #op = split.operator(RemoveAsset.bl_idname, icon="REMOVE")
+                #op.asset_type = ASSET_TYPE_MATERIAL
+                #op.asset = properties.imat_previews
 
             else:
                 box.label(text="No material categories yet")

@@ -35,11 +35,15 @@ from . tools_ops            import (DX2OGLConverterOperator, GenerateTwoLayerTex
                                         ImportExtMusgrave, ImportExtVoronoi, ImportMixNoise,
                                         ImportScalarMix, ImportIntensityVisualizer, ImportScalarMapper,
                                         ImportNormalDirection, ImportSlice)             
-from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview, RefreshMaterialPreviews, ReRenderMaterialPreview                                        
+from . support_ops          import RefreshObjectPreviews, ReRenderObjectPreview, RefreshMaterialPreviews, ReRenderMaterialPreview, RemoveAsset                                        
 from . utils                import (categories, categories_enum, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL,
                                         ASSET_TYPE_NODES, ASSET_TYPE_NODES_MATERIALS)
 from . icon_helper          import IconHelper
 
+# 0.2.0
+#   - New version number scheme
+#   - Render ALL fixed
+#   - Remove Asset added to objects (material is more complex, so on the TODO list)
 # 0.1.12
 #   - Blender 2.9 compatibility (texture path remap option in preferences)
 #   - Option to show .blend + .fbx added to preferences
@@ -132,7 +136,7 @@ from . icon_helper          import IconHelper
 
 bl_info = {
     "name" : "Asset Wizard",
-    "version": (0, 1, 12),
+    "version": (0, 2, 0),
     "author" : "h0bB1T",
     "description" : "Asset import and export utility.",
     "blender" : (2, 80, 0),
@@ -194,6 +198,7 @@ ops = [
     ReRenderObjectPreview,
     RefreshMaterialPreviews,
     ReRenderMaterialPreview,
+    RemoveAsset,
 ]
 
 def register():

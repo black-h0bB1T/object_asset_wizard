@@ -14,13 +14,14 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
-import bpy
+import bpy, os
 
 from bpy.types              import Operator
 
-from . properties           import Properties
+from . properties           import Properties, StringProperty
 from . preview_helper       import PreviewHelper
-from . utils                import export_file, CategoriesCache, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL
+from . preferences          import PreferencesPanel
+from . utils                import export_file, CategoriesCache, ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL, PREVIEW_EXT
 
 class RefreshObjectPreviews(Operator):
     bl_idname = "asset_wizard.refresh_object_previews_op"
@@ -76,3 +77,48 @@ class ReRenderMaterialPreview(Operator):
             Properties.get().imat_previews
         )
         return {'FINISHED'}        
+
+
+class RemoveAsset(Operator):
+    bl_idname = "asset_wizard.remove_asset_op"
+    bl_label = "Remove Asset?"
+    bl_description = "Remove asset from library"
+
+
+    asset_type: StringProperty()
+    asset: StringProperty()
+
+
+    def execute(self, context):
+        asset = os.path.join(PreferencesPanel.get().root, self.asset)
+        preview = os.path.splitext(asset)[0] + PREVIEW_EXT
+
+        failed = False
+        try:
+            if os.path.exists(asset):
+                os.remove(asset)
+        except Exception as ex:
+            failed = True
+
+        failed = False
+        try:
+            if os.path.exists(preview):
+                os.remove(preview)
+        except Exception as ex:
+            failed = True
+
+        if self.asset_type == ASSET_TYPE_OBJECT:
+            bpy.ops.asset_wizard.refresh_object_previews_op()
+        elif self.asset_type == ASSET_TYPE_MATERIAL:
+            bpy.ops.asset_wizard.refresh_material_previews_op()
+
+        if failed:
+            self.report({'ERROR'}, "Removing the asset failed")
+        else:
+            self.report({'INFO'}, "Asset removed")
+
+        return {'FINISHED'}
+
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)

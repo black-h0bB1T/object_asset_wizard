@@ -197,21 +197,24 @@ def parse_entry_list(asset_type, category):
     extensions = formats_to_parse(asset_type)
 
     entries = []
-    for f in os.listdir(path):
-        if f.lower().endswith(extensions):
-            fullname = os.path.join(path, f)
-            if asset_type == ASSET_TYPE_MATERIAL:
-                # Check if there are more than one material in this file.
-                with bpy.data.libraries.load(fullname, link=False) as (data_from, data_to):
-                    if len(data_from.materials) > 1:
-                        for mat in data_from.materials:
-                            entries.append(fullname + "::" + mat)
-                    else:
-                        # Single material file.
-                        entries.append(fullname)
-            else:
-                # Object file
-                entries.append(fullname)
+    try:
+        for f in os.listdir(path):
+            if f.lower().endswith(extensions):
+                fullname = os.path.join(path, f)
+                if asset_type == ASSET_TYPE_MATERIAL:
+                    # Check if there are more than one material in this file.
+                    with bpy.data.libraries.load(fullname, link=False) as (data_from, data_to):
+                        if len(data_from.materials) > 1:
+                            for mat in data_from.materials:
+                                entries.append(fullname + "::" + mat)
+                        else:
+                            # Single material file.
+                            entries.append(fullname)
+                else:
+                    # Object file
+                    entries.append(fullname)
+    except Exception as ex:
+        print(f"Can't parse: {path}")
     
     return entries
 

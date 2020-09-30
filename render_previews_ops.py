@@ -22,7 +22,7 @@ from bpy.props              import BoolProperty
 from . preferences          import PreferencesPanel
 from . execute_blender      import run_preview_render
 from . preview_parsers      import CollectionImageParser
-from . utils                import (CategoriesCache, categories, parse_entry_list, split_entry, 
+from . utils                import (CategoriesCache, categories, categories_enum, parse_entry_list, split_entry, 
                                         ASSET_TYPE_OBJECT, ASSET_TYPE_MATERIAL)
 from . properties           import Properties
 
@@ -127,8 +127,8 @@ class RenderPreviews:
         """
         Adds all files that need to be preview rendered to job list.
         """
-        for category in categories(asset_type):
-            for entry in parse_entry_list(asset_type, category):
+        for category in categories_enum(asset_type):
+            for entry in parse_entry_list(asset_type, category[0]):
                 if rerender:
                     self.add_job(asset_type, entry)
                 else:
